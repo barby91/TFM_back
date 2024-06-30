@@ -1,0 +1,15 @@
+name: Say hello
+on:
+  push:
+    branches:
+      - master
+jobs:
+  hello_wordl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo the message
+        run: |
+          echo "hola gente!"
+      - name: Dime la fecha
+        run: date
+      - run: ls -l

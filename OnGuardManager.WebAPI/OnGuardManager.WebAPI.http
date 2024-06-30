@@ -1,0 +1,6 @@
+@OnGuardManager.WebAPI_HostAddress = http://localhost:5043
+
+GET {{onGuardManager.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
