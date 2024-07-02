@@ -8,7 +8,9 @@ using onGuardManager.Data.Repository;
 using onGuardManager.Logger;
 using System.Text;
 using onGuardManager.Models.Entities;
-using onGuardManager.WebAPI.Common;
+using Swashbuckle.AspNetCore.SwaggerUI;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 try
 {
@@ -22,7 +24,7 @@ try
 						  policy =>
 						  {
 							  policy.WithOrigins("https://localhost:44351", "http://localhost:4200",
-												 "https://main.dvoyy061ycswa.amplifyapp.com/login")
+												 "https://main.dvoyy061ycswa.amplifyapp.com")
 									.AllowAnyHeader()
 									.AllowAnyMethod();
 						  });
@@ -35,7 +37,10 @@ try
 	builder.Services.AddControllers();
 	// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 	builder.Services.AddEndpointsApiExplorer();
-	builder.Services.AddSwaggerGen();
+	builder.Services.AddSwaggerGen(options =>
+	{
+		options.CustomSchemaIds(type => type.ToString());
+	});
 
 	builder.Services.AddControllersWithViews();
 	builder.Services.AddDbContext<OnGuardManagerContext>(opciones =>
@@ -71,12 +76,9 @@ try
 	var app = builder.Build();
 
 	// Configure the HTTP request pipeline.
-	if (app.Environment.IsDevelopment())
-	{
-		app.UseSwagger();
-		app.UseSwaggerUI();
-	}
-
+	app.UseSwagger();
+	app.UseSwaggerUI();
+	
 	app.UseHttpsRedirection();
 
 	app.UseCors("AllowOrigin");
