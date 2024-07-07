@@ -65,7 +65,7 @@ namespace onGuardManager.Models.DTO.Models
 			{
 				this.levelName = user.IdLevelNavigation.Name;
 				//TODO solo para pruebas de asignación de guardias
-				//this.NameSurname = user.Name + "_" + user.IdLevelNavigation.Name;
+				this.NameSurname = user.Name + "_" + user.IdLevelNavigation.Name;
 			}
 			if (user.IdRolNavigation != null)
 			{
@@ -93,31 +93,31 @@ namespace onGuardManager.Models.DTO.Models
 			colors.Add(new ColorUser()
 			{
 				name = "Colon",
-				color = "#FADBD8"
+				color = "#F30B0B"
 			});
 			
 			colors.Add(new ColorUser()
 			{
 				name = "Hepáticobilio",
-				color = "#E8DAEF"
+				color = "#12F30B"
 			});
 			
 			colors.Add(new ColorUser()
 			{
 				name = "Endocrino",
-				color = "#D6EAF8"
+				color = "#F30BDE"
 			});
 			
 			colors.Add(new ColorUser()
 			{
 				name = "Esófago gástrica",
-				color = "#D0ECE7"
+				color = "#0B7FF3"
 			});
 			
 			colors.Add(new ColorUser()
 			{
 				name = "Rotatorio",
-				color = "#FDEBD0"
+				color = "#ECF30B"
 			});
 
 			ColorUser? color = colors.Find(c => c.name == unityName);

@@ -8,6 +8,9 @@ using onGuardManager.Models.Entities;
 using onGuardManager.Models.DTO.Enumerados;
 using Newtonsoft.Json;
 using System.Collections.Immutable;
+using System.Linq;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.Identity.Client;
 
 namespace onGuardManager.Bussiness.Service
 {
@@ -77,7 +80,7 @@ namespace onGuardManager.Bussiness.Service
 		{
 			//obtenemos todos los usuarios de un centro o asociados a una especialidad
 			List<User> users;
-			List<UserStats> userstats = new List<UserStats>();
+			List<UserStats> userStats = new List<UserStats>();
 			List<Unity> unities = new List<Unity>();
 			List<PublicHoliday> publicHolidays = await _publicHolidayRepository.GetAllPublicHolidaysByCenter(guardRequest.idCenter);
 			totalGuards = new Dictionary<int, int>();
@@ -115,7 +118,7 @@ namespace onGuardManager.Bussiness.Service
 			else
 			{
 				previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year, 0);
-				previousGuards = previousGuards.Where(pg => pg.Day.Month != guardRequest.month).ToList();
+				previousGuards = previousGuards.Where(pg => pg.Day.Month != (guardRequest.month > 0 ? guardRequest.month : (DateTime.Now.Month + 1))).ToList();
 			}
 
 			foreach (User user in users)
@@ -123,17 +126,18 @@ namespace onGuardManager.Bussiness.Service
 				//contamos los festivos realizados por cada usuario
 				List<DayGuard> userGuard = previousGuards.Where(g => g.assignedUsers.Select(a => a.Id).Contains(user.Id)).ToList();
 				int totalWeekends = userGuard.Count(ug => ug.Day.DayOfWeek == DayOfWeek.Saturday ||
-														  ug.Day.DayOfWeek == DayOfWeek.Sunday);
+														  ug.Day.DayOfWeek == DayOfWeek.Sunday ||
+														  ug.Day.DayOfWeek == DayOfWeek.Friday);
 				int totalPublicHolidays = userGuard.Count(ug => publicHolidays.Select(ph => ph.Date)
 												   .Contains(ug.Day));
 				int totalUserGuards = userGuard.Count;
-				userstats.Add(new UserStats(user, guardRequest.month == 1 ? 0 : totalUserGuards, guardRequest.month == 1 ? 0 : totalWeekends, guardRequest.month == 1 ? 0 : totalPublicHolidays));
+				userStats.Add(new UserStats(user, guardRequest.month == 1 ? 0 : totalUserGuards, guardRequest.month == 1 ? 0 : totalWeekends, guardRequest.month == 1 ? 0 : totalPublicHolidays));
 			}
 			
 			if (guardRequest.month > 0)
 			{
 				return await AsignMonthGuards(guardRequest.month, guardRequest.idCenter, users, previousGuards,
-											  unities, userstats, publicHolidays);
+											  unities, userStats, publicHolidays);
 			}
 			else
 			{
@@ -141,14 +145,27 @@ namespace onGuardManager.Bussiness.Service
 				bool continueLoop = true;
 				int month = DateTime.Now.Month + 1;
 
-				while(month < 12 && continueLoop)
+				while(month <= 12 && continueLoop)
 				{
 					result = await AsignMonthGuards(month, guardRequest.idCenter, users, previousGuards,
-													unities, userstats, publicHolidays);
+													unities, userStats, publicHolidays);
 					if(!result.Contains("OK"))
 					{
 						continueLoop = false;
 					}
+
+					if (guardRequest.month == 1)
+					{
+						previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year - 1, 12);
+					}
+					else
+					{
+						previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year, 0);
+						previousGuards = previousGuards.Where(pg => pg.Day.Month != guardRequest.month).ToList();
+					}
+
+					//reseteamos el total de fines de semana y festivos por mes
+					userStats.ForEach(u => u.totalGuardMonth = u.totalWeekendsMonth = u.totaPublicHolidaysMonth = 0);
 					month++;
 				}
 
@@ -225,85 +242,231 @@ namespace onGuardManager.Bussiness.Service
 			}
 
 			//calculamos el número de festivos y fines de semana del mes
-			/*int totalHoliday = days.Count(d => d.day.DayOfWeek == DayOfWeek.Sunday || d.day.DayOfWeek == DayOfWeek.Saturday) +
-								publicHolidays.Count(ph => ph.Date.Month == guardRequest.month &&
+			/*int totalHoliday = days.Count(d => d.day.DayOfWeek == DayOfWeek.Sunday || d.day.DayOfWeek == DayOfWeek.Saturday || d.day.DayOfWeek == DayOfWeek.Friday) +
+								publicHolidays.Count(ph => ph.Date.Month == month &&
 														   ph.Date.DayOfWeek != DayOfWeek.Saturday &&
-														   ph.Date.DayOfWeek != DayOfWeek.Sunday);
-			maxWeekends = (int)Math.Round(((double)totalHoliday / (double)(userstats.Count / 6)), MidpointRounding.ToEven);*/
+														   ph.Date.DayOfWeek != DayOfWeek.Sunday &&
+														   ph.Date.DayOfWeek != DayOfWeek.Friday);
+			
+			maxWeekends = (int)Math.Round(((double)totalHoliday / (double)(userstats.Count / 6)), MidpointRounding.ToPositiveInfinity);*/
 
-			if (!BacktrackingGuard(days, userstats, OrderDays(days, publicHolidays), publicHolidays, unities, 1))
+			if ((!BacktrackingGuard(days, userstats, OrderDaysAbsent(days, publicHolidays), publicHolidays, unities))&&
+				(!BacktrackingGuard(days, userstats, OrderDaysAbsentPossible(days, publicHolidays), publicHolidays, unities)) &&
+				(!BacktrackingGuard(days, userstats, OrderDaysDescendingAbsent(days, publicHolidays), publicHolidays, unities)) &&
+				(!BacktrackingGuard(days, userstats, OrderDaysDescendingAbsentPossible(days, publicHolidays), publicHolidays, unities)))
 			{
 				return await Task.FromResult("No se pueden asignar las guardias del mes " + month);
 			}
 			else
 			{
-				if (await DeletePreviousGuard(month))
+				//si se ha asignado, se reorganizan aquellos usuarios que tengnan menos guardias del mínimo
+				if (!ReorderUsers(days, userstats, publicHolidays, unities))
 				{
-					//guardamos la asignación
-					bool result = true;
-					foreach (Day day in days)
-					{
-						DayGuard guard = new DayGuard()
-						{
-							Day = day.day,
-							assignedUsers = day.assigned
-						};
-
-						result = result && await SaveGuard(guard);
-					}
-
-					List<DayGuardModel> guards = GetGuards(idCenter, DateTime.Now.Year).Result;
-					List<GuardStats> stats = new List<GuardStats>();
-
-					foreach (DayGuardModel guard in guards)
-					{
-						foreach (string name in guard.assignedUsers.Select(au => au.NameSurname))
-						{
-							if (stats.Exists(s => s.UserName == name))
-							{
-								stats.First(s => s.UserName == name).GuardByUser++;
-								if (guard.Day.DayOfWeek == DayOfWeek.Sunday || guard.Day.DayOfWeek == DayOfWeek.Saturday)
-								{
-									stats.First(s => s.UserName == name).WeekendsbyUser++;
-								}
-								else if (publicHolidays.Select(ph => ph.Date).Contains(guard.Day))
-								{
-									stats.First(s => s.UserName == name).HolidaysByUser++;
-								}
-							}
-							else
-							{
-								stats.Add(new GuardStats()
-								{
-									UserName = name,
-									GuardByUser = 1,
-									HolidaysByUser = (guard.Day.DayOfWeek != DayOfWeek.Sunday &&
-													  guard.Day.DayOfWeek != DayOfWeek.Saturday &&
-													  publicHolidays.Select(ph => ph.Date).Contains(guard.Day)) ? 1 : 0,
-									WeekendsbyUser = (guard.Day.DayOfWeek == DayOfWeek.Sunday ||
-													  guard.Day.DayOfWeek == DayOfWeek.Saturday) ? 1 : 0
-								});
-							}
-						}
-					}
-					if (result)
-					{
-
-						dynamic obj = new
-						{
-							result = "OK",
-							stats = stats
-						};
-						return await Task.FromResult(JsonConvert.SerializeObject(obj));
-					}
-					else
-					{
-						return await Task.FromResult("Error al guardar la guardia");
-					}
+					return await Task.FromResult("No se pueden asignar las guardias mínimas por usuario del mes " + month);
 				}
 				else
 				{
-					return await Task.FromResult("Error al borrar la guardia previamente calculada");
+					if (await DeletePreviousGuard(month))
+					{
+						//guardamos la asignación
+						bool result = true;
+						foreach (Day day in days)
+						{
+							DayGuard guard = new DayGuard()
+							{
+								Day = day.day,
+								assignedUsers = day.assigned
+							};
+
+							result = result && await SaveGuard(guard);
+						}
+
+						List<DayGuardModel> guards = GetGuards(idCenter, DateTime.Now.Year).Result;
+						GuardStats stat = new GuardStats()
+						{
+							TotalDobletes = 0,
+							TotalTripletes = 0,
+							TotalCuatripletes = 0,
+							users = new List<GuardUserStats>()
+						};
+
+						foreach (DayGuardModel guard in guards)
+						{
+
+							foreach (string name in guard.assignedUsers.Select(au => au.NameSurname))
+							{
+								if (stat.users.Exists(s => s.UserName == name))
+								{
+									stat.users.First(s => s.UserName == name).GuardByUser++;
+									if (guard.Day.DayOfWeek == DayOfWeek.Sunday || guard.Day.DayOfWeek == DayOfWeek.Saturday || guard.Day.DayOfWeek == DayOfWeek.Friday)
+									{
+										stat.users.First(s => s.UserName == name).WeekendsbyUser++;
+									}
+									else if (publicHolidays.Select(ph => ph.Date).Contains(guard.Day))
+									{
+										stat.users.First(s => s.UserName == name).HolidaysByUser++;
+									}
+								}
+								else
+								{
+									stat.users.Add(new GuardUserStats()
+									{
+										UserName = name,
+										GuardByUser = 1,
+										HolidaysByUser = (guard.Day.DayOfWeek != DayOfWeek.Sunday &&
+														  guard.Day.DayOfWeek != DayOfWeek.Saturday &&
+														  guard.Day.DayOfWeek != DayOfWeek.Friday &&
+														  publicHolidays.Select(ph => ph.Date).Contains(guard.Day)) ? 1 : 0,
+										WeekendsbyUser = (guard.Day.DayOfWeek == DayOfWeek.Sunday ||
+														  guard.Day.DayOfWeek == DayOfWeek.Saturday ||
+														  guard.Day.DayOfWeek == DayOfWeek.Friday) ? 1 : 0
+									});
+								}
+							}
+
+							foreach (User us in users)
+							{
+								stat.TotalDobletes += guards.Count(g => g.Day.AddDays(2) == guard.Day && g.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname) ||
+												  g.Day.AddDays(-2) == guard.Day && g.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname));
+
+								//tripletes
+								if ((guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+													d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									guards.Exists(d => d.Day.AddDays(4) == guard.Day &&
+													d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+								   ) ||
+								   (guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									guards.Exists(d => d.Day.AddDays(-4) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+								   ) ||
+								   (guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+								   ) ||
+								   (guards.Exists(d => d.Day.AddDays(-4) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+								   ) ||
+								   (guards.Exists(d => d.Day.AddDays(4) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+													 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+								   ))
+								{
+									stat.TotalTripletes++;
+								}
+
+								//cuadrupletes
+								if ((guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+														d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(4) == guard.Day &&
+														d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(6) == guard.Day &&
+														d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+														d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(-4) == guard.Day &&
+														d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(-6) == guard.Day &&
+														d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(4) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(-4) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+										guards.Exists(d => d.Day.AddDays(4) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+										guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(4) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(-4) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(-6) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(-4) == guard.Day &&
+														d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(6) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(4) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(-4) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(-6) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(-2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									) ||
+									(guards.Exists(d => d.Day.AddDays(4) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(6) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname)) &&
+									 guards.Exists(d => d.Day.AddDays(2) == guard.Day &&
+														 d.assignedUsers.Select(a => a.NameSurname).Contains(us.Surname))
+									))
+								{
+									stat.TotalCuatripletes++;
+								}
+							}
+
+						}
+						if (result)
+						{
+
+							dynamic obj = new
+							{
+								result = "OK",
+								stat = stat
+							};
+							return await Task.FromResult(JsonConvert.SerializeObject(obj));
+						}
+						else
+						{
+							return await Task.FromResult("Error al guardar la guardia");
+						}
+					}
+					else
+					{
+						return await Task.FromResult("Error al borrar la guardia previamente calculada");
+					}
 				}
 			}
 		}
@@ -367,576 +530,11 @@ namespace onGuardManager.Bussiness.Service
 			}
 		}
 
-		//private bool SearchTree(List<Day> days, List<UserStats> userStats, List<Unity> unities,
-		//						List<Day> assignedDays, List<PublicHoliday> publicHolidays)
-		//{
-		//	if (days.Count == 0)
-		//	{
-		//		return true;
-		//	}
-		//	else
-		//	{
-		//		//primero ordenamos los días de mayor número de ausentes a menor
-		//		Day day = days.Where(d => d.assigned.Count < 6).OrderByDescending(d => d.absents.Count + d.possible.Count).ToList()[0];
-		//		LogClass.WriteLog(ErrorWrite.Info, day.day.ToString());
-
-		//		//ordenamos  los residentes por total de fines de semana, festivos y guardias totales que
-		//		//no estén en la lista de ausentes ni en la de posibles
-		//		bool resultado = false;
-		//		while (!resultado && userStats.Where(u => !day.absents.Keys.Contains(u.user) &&
-		//												  !day.assigned.Contains(u.user) &&
-		//												  !day.possible.Contains(u.user))
-		//									  .OrderBy(us => us.totalWeekends)
-		//									  .ThenBy(us => us.totaPublicHolidays)
-		//									  .ThenBy(us => us.totalGuardMonth)
-		//									  .ToList().Count > 0)
-		//		{
-		//			resultado = PutResident(userStats.Where(u => !day.absents.Keys.Contains(u.user) &&
-		//														 !day.assigned.Contains(u.user) &&
-		//														 !day.possible.Contains(u.user))
-		//											 .OrderBy(us => us.totalWeekends)
-		//											 .ThenBy(us => us.totaPublicHolidays)
-		//											 .ThenBy(us => us.totalGuardMonth)
-		//											 .ToList(),
-		//									day, days, unities, assignedDays, publicHolidays);
-		//		}
-
-		//		//si no se han podido asignar ninguno de los residentes, se comprueban los posibles,
-		//		//es decir, los que hay que evitar, salvo que no se pueda
-		//		while (!resultado && userStats.Where(u => !day.absents.Keys.Contains(u.user) &&
-		//												  !day.assigned.Contains(u.user))
-		//															  .OrderBy(us => us.totalWeekends)
-		//															  .ThenBy(us => us.totaPublicHolidays)
-		//															  .ThenBy(us => us.totalGuardMonth)
-		//															  .ToList().Count > 0)
-		//		{
-		//			resultado = PutResident(userStats.Where(u => !day.absents.Keys.Contains(u.user) &&
-		//														 !day.assigned.Contains(u.user))
-		//											 .OrderBy(us => us.totalWeekends)
-		//											 .ThenBy(us => us.totaPublicHolidays)
-		//											 .ThenBy(us => us.totalGuardMonth)
-		//											 .ToList(),
-		//									day, days, unities, assignedDays, publicHolidays);
-		//		}
-
-		//		if (!resultado)
-		//		{
-		//			return false;
-		//		}
-		//		else
-		//		{
-		//			assignedDays.Add(day);
-		//			return SearchTree(days, userStats, unities, assignedDays, publicHolidays);
-		//		}
-		//	}
-		//}
-
-		//private bool PutResident(List<UserStats> userStats, Day day, List<Day> days, List<Unity> unities,
-		//						 List<Day> assignedDays, List<PublicHoliday> publicHolidays)
-		//{
-		//	bool result;
-		//	List<Day> originalDays = CopyList(days);
-		//	Day originalDay = (Day)day.Clone();
-		//	if (userStats.Count == 0)
-		//	{
-		//		result = false;
-		//	}
-		//	else
-		//	{
-		//		UserStats? r;
-		//		//Si aún no hemos asignado los 5 escogemos el primero de los óptimos cuyo level no coincida con uno ya escogido
-		//		if (day.assigned.Count < 5)
-		//		{
-		//			Dictionary<decimal, int> totalUnity = new Dictionary<decimal, int>();
-		//			foreach(decimal un in userStats.Select(u => u.user.IdUnity))
-		//			{
-		//				if(totalUnity.ContainsKey(un))
-		//				{
-		//					totalUnity[un] += 1;
-		//				}
-		//				else
-		//				{
-		//					totalUnity.Add(un, 1);
-		//				}
-		//			}
-
-		//			r = userStats.Find(us => !day.assigned.Select(a => a.IdLevel).Contains(us.user.IdLevel) && us.user.IdUnity == totalUnity.OrderBy(t => t.Value).First().Key);
-		//		}
-		//		else
-		//		{
-		//			r = userStats[0];
-		//		}
-		//		if (r != null)
-		//		{
-		//			//Se actualizan las estadísitcas del usuario
-		//			r.totalGuardMonth++;
-		//			if (day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Saturday)
-		//			{
-		//				r.totalWeekends++;
-		//			}
-		//			//Si el día esta entre la lista de festivos se suma uno a los festivos
-		//			if (publicHolidays.Exists(ph => ph.Date == day.day))
-		//			{
-		//				r.totaPublicHolidays++;
-		//			}
-
-		//			//Se asigna al usuario al día y se elimina de la lista de posibles si estuviera
-		//			day.assigned.Add(r.user);
-		//			day.possible.Remove(r.user);
-
-		//			//se añaden a la lista de ausentes los usuarios que no cumplan alguna regla o a la de posibles
-		//			//si hay que evitarlos
-		//			CheckRules(r, userStats, day, days, unities, assignedDays);
-
-		//			if (day.assigned.Count < 6)
-		//			{
-		//				result = PutResident(userStats.Where(u => !day.absents.Keys.Contains(u.user) &&
-		//														  !day.assigned.Contains(u.user) &&
-		//														  !day.possible.Contains(u.user))
-		//											.OrderBy(us => us.totalWeekends)
-		//											.ThenBy(us => us.totaPublicHolidays)
-		//											.ThenBy(us => us.totalGuardMonth)
-		//											.ToList(), day, days, unities, assignedDays, publicHolidays);
-		//			}
-		//			else
-		//			{
-		//				result = true;
-		//			}
-
-		//			if (!result)
-		//			{
-		//				//si no se ha podido colocar el primer residente de forma exitosa, se añade a la lista de ausentes,
-		//				//ya que con él en la lista de asignados no se obtiene un resultado y se deshacen los cambios que 
-		//				//se hayan hecho
-		//				foreach (User user in day.absents.Keys)
-		//				{
-		//					if (!originalDay.absents.Keys.Select(aa => aa.Id).Contains(user.Id))
-		//					{
-		//						day.absents.Remove(user);
-		//					}
-		//				}
-		//				day.possible.RemoveAll(p => !originalDay.possible.Select(pp => pp.Id).Contains(p.Id));
-		//				day.assigned.RemoveAll(a => !originalDay.assigned.Select(aa => aa.Id).Contains(a.Id));
-		//				day.absents.Add(r.user, "No lleva a solución");
-
-		//				//se actualizan las estadísiticas del usuario
-		//				//Se actualizan las estadísitcas del usuario
-		//				r.totalGuardMonth--;
-		//				if (day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Saturday)
-		//				{
-		//					r.totalWeekends--;
-		//				}
-		//				//Si el día esta entre la lista de festivos se suma uno a los festivos
-		//				if (publicHolidays.Exists(ph => ph.Date == day.day))
-		//				{
-		//					r.totaPublicHolidays--;
-		//				}
-
-		//				//no se ha podido asignar uno, probamos con la lista de posibles
-		//				result = PutResident(userStats.Where(u => !day.absents.Keys.Contains(u.user) &&
-		//														  !day.assigned.Contains(u.user))
-		//											.OrderBy(us => us.totalWeekends)
-		//											.ThenBy(us => us.totaPublicHolidays)
-		//											.ThenBy(us => us.totalGuardMonth)
-		//											.ToList(), day, days, unities, assignedDays, publicHolidays);
-		//			}
-		//		}
-		//		else
-		//		{
-		//			foreach (User user in userStats.Select(us => us.user).ToList())
-		//			{
-		//				day.absents.Add(user, "niveles repetidos");
-		//			}
-		//			result = false;
-		//		}
-		//	}
-
-		//	return result;
-		//}
-
-		//private void CheckRules(UserStats r, List<UserStats> userStats, Day day,
-		//						List<Day> days, List<Unity> unities, List<Day> assignedDays)
-		//{
-		//	//R1 Nunca dos días seguidos de guardia
-		//	if (days.Exists(d => d.day == day.day.AddDays(1)) && !days.First(d => d.day == day.day.AddDays(1)).assigned.Contains(r.user) &&
-		//		!days.First(d => d.day == day.day.AddDays(1)).absents.Keys.Contains(r.user))
-		//	{
-		//		days.First(d => d.day == day.day.AddDays(1)).absents.Add(r.user, "nunca 2 días seguidos (dia siguiente)");
-		//		//si estuviera en la lista de posibles, se elimina
-		//		days.First(d => d.day == day.day.AddDays(1)).possible.Remove(r.user);
-		//	}
-		//	if (days.Exists(d => d.day == day.day.AddDays(-1)) && !days.First(d => d.day == day.day.AddDays(-1)).assigned.Contains(r.user) &&
-		//		!days.First(d => d.day == day.day.AddDays(-1)).absents.Keys.Contains(r.user))
-		//	{
-		//		days.First(d => d.day == day.day.AddDays(-1)).absents.Add(r.user, "nunca 2 días seguidos (día anterior)");
-		//		//si estuviera en la lista de posibles, se elimina
-		//		days.First(d => d.day == day.day.AddDays(-1)).possible.Remove(r.user);
-		//	}
-
-		//	//R2 Se puede dobletes (guardia-libre-guardia) pero evitarlos en la medida de lo posible y
-		//	//nunca viernes-domingo ni sábado-martes
-		//	if (day.day.DayOfWeek == DayOfWeek.Friday)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(2)) && !days.First(d => d.day == day.day.AddDays(2)).absents.Keys.Contains(r.user))
-		//		{
-		//			days.First(d => d.day == day.day.AddDays(2)).absents.Add(r.user, "nunca viernes-domingo");
-		//		}
-		//	}
-		//	else if (day.day.DayOfWeek == DayOfWeek.Saturday)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(3)) && !days.First(d => d.day == day.day.AddDays(3)).absents.Keys.Contains(r.user))
-		//		{
-		//			days.First(d => d.day == day.day.AddDays(3)).absents.Add(r.user, "nunca sábado-martes");
-		//		}
-		//	}
-		//	else if (day.day.DayOfWeek == DayOfWeek.Sunday)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(-2)) && !days.First(d => d.day == day.day.AddDays(-2)).absents.Keys.Contains(r.user))
-		//		{
-		//			days.First(d => d.day == day.day.AddDays(-2)).absents.Add(r.user, "nunca viernes-domingo");
-		//		}
-		//	}
-		//	else if (day.day.DayOfWeek == DayOfWeek.Tuesday)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(-3)) && !days.First(d => d.day == day.day.AddDays(-3)).absents.Keys.Contains(r.user))
-		//		{
-		//			days.First(d => d.day == day.day.AddDays(-3)).absents.Add(r.user, "nunca sábado-martes");
-		//		}
-		//	}
-		//	else
-		//	{
-		//		//se añade este usuario a la lista de posibles para +2 días y para -2 días
-		//		if (days.Exists(d => d.day == day.day.AddDays(2)) && days.First(d => d.day == day.day.AddDays(2)).absents.Keys.Contains(r.user))
-		//		{
-		//			days.First(d => d.day == day.day.AddDays(2)).possible.Add(r.user, "Ha tenido guardia dos días antes");
-		//		}
-		//		if (days.Exists(d => d.day == day.day.AddDays(-2)) && !days.First(d => d.day == day.day.AddDays(-2)).absents.Keys.Contains(r.user))
-		//		{
-		//			days.First(d => d.day == day.day.AddDays(-2)).possible.Add(r.user, "Ha tenido guardia dos días después");
-		//		}
-		//	}
-
-		//	//R3 Nunca mas de 2 de la misma unidad de guardia, salvo de esófago gástrica que solo
-		//	//se puede 1, de lunes a jueves. Sábado y domingo no mas de 3 de la misma unidad. 
-		//	if (((day.day.DayOfWeek == DayOfWeek.Monday || day.day.DayOfWeek == DayOfWeek.Tuesday ||
-		//		  day.day.DayOfWeek == DayOfWeek.Wednesday || day.day.DayOfWeek == DayOfWeek.Thursday)
-		//		&& ((unities.Exists(u => u.Name.ToLower()
-		//									   .Replace("á", "a")
-		//									   .Replace("é", "e")
-		//									   .Replace("í", "i")
-		//									   .Replace("ó", "o")
-		//									   .Replace("ú", "u")
-		//									   .Replace(" ", "")
-		//									   .Equals("esofagogastrica") &&
-		//								 u.IdSpecialty == r.user.IdSpecialty) &&
-		//			 r.user.IdUnity == unities.Find(u => u.Name.ToLower()
-		//													   .Replace("á", "a")
-		//													   .Replace("é", "e")
-		//													   .Replace("í", "i")
-		//													   .Replace("ó", "o")
-		//													   .Replace("ú", "u")
-		//													   .Replace(" ", "")
-		//													   .Equals("esofagogastrica") &&
-		//												 u.IdSpecialty == r.user.IdSpecialty)?.Id)
-		//			|| (day.assigned.Count(a => a.IdSpecialty == r.user.IdSpecialty &&
-		//										a.IdUnity == r.user.IdUnity) == 2)))
-		//		|| ((day.day.DayOfWeek == DayOfWeek.Saturday || day.day.DayOfWeek == DayOfWeek.Sunday)
-		//			&& day.assigned.Count(a => a.IdSpecialty == r.user.IdSpecialty &&
-		//									   a.IdUnity == r.user.IdUnity) == 3))
-		//	{
-		//		//El resto de residentes de la misma unidad quedan inelegibles para este día
-		//		foreach (User user in userStats.Where(u => u.user.IdSpecialty == r.user.IdSpecialty &&
-		//												  u.user.IdUnity == r.user.IdUnity &&
-		//												  !day.assigned.Contains(u.user) &&
-		//												  !day.absents.Keys.Contains(u.user))
-		//									  .Select(u => u.user))
-		//		{
-		//			day.absents.Add(user, "no más de dos de la misma unidad");
-		//		}
-		//	}
-
-		//	//R4 Máx 6 guardias por cabeza, aunque el máximo legal son 7
-		//	if (days.Count(d => d.assigned.Exists(u => u.Id == r.user.Id)) == 6)
-		//	{
-		//		//queda inelegible para el resto de días
-		//		foreach (Day d in days.Where(d => d.assigned.Count < 6))
-		//		{
-		//			if (!d.absents.Keys.Contains(r.user))
-		//			{
-		//				d.absents.Add(r.user, "6 guardias asignadas");
-		//			}
-		//		}
-		//	}
-
-		//	//R5 Siempre uno de cada año de guardia. Añadimos todos los residentes del mismo año que el elegido
-		//	//a la lista de inelegibles, salvo el que esté rotando.
-		//	decimal idRotatorio = unities.First(u => u.Name == "Rotatorio").Id;
-		//	foreach (User user in userStats.Where(u => u.user.IdLevel == r.user.IdLevel &&
-		//											  ((r.user.IdUnity != idRotatorio && u.user.IdUnity != idRotatorio) ||
-		//											   (r.user.IdUnity == idRotatorio && u.user.IdUnity == idRotatorio)) &&
-		//											  !day.assigned.Contains(u.user) &&
-		//											  !day.absents.Keys.Contains(u.user))
-		//								  .Select(u => u.user))
-		//	{
-		//		day.absents.Add(user, "nivel ya asignado al día");
-		//	}
-
-		//	//si hubiera alguno de los inelegibles en la lista de posibles lo quitamos
-		//	foreach (decimal uId in day.absents.Keys.Select(u => u.Id))
-		//	{
-		//		if (day.possible.Find(p => p.Id == uId) != null)
-		//		{
-		//			day.possible.Remove(day.possible.First(p => p.Id == uId));
-		//		}
-		//	}
-
-		//	//R6 R5 y R4 de la misma unidad no deberían coincidir a ser posible.
-		//	if (r.user.IdLevelNavigation.Name.ToUpper().Equals("R4"))
-		//	{
-		//		//todos los de la misma unidad de R5 deben ir a posibles
-		//		day.possible.AddRange(userStats.Where(u => u.user.IdLevelNavigation.Name.ToUpper().Equals("R5") &&
-		//												   u.user.IdUnity == r.user.IdUnity &&
-		//												   !day.absents.Keys.Contains(u.user) &&
-		//												   !day.possible.Contains(u.user) &&
-		//												   !day.assigned.Contains(u.user))
-		//									   .Select(u => u.user));
-
-		//	}
-		//	if (r.user.IdLevelNavigation.Name.ToUpper().Equals("R5"))
-		//	{
-		//		//todos los de la misma unidad de R4 deben ir a posibles
-		//		day.possible.AddRange(userStats.Where(u => u.user.IdLevelNavigation.Name.ToUpper().Equals("R4") &&
-		//												   u.user.IdUnity == r.user.IdUnity &&
-		//												   !day.absents.Keys.Contains(u.user) &&
-		//												   !day.possible.Contains(u.user) &&
-		//												   !day.assigned.Contains(u.user))
-		//									   .Select(u => u.user));
-
-		//	}
-
-		//	//R7 R3 y R4 de pared (unidad de endocrino) no deberían coincidir
-		//	if (unities.Exists(u => u.IdSpecialty == r.user.IdSpecialty && u.Name.ToLower().Equals("endocrino")))
-		//	{
-		//		if (r.user.IdUnity == unities.First(u => u.IdSpecialty == r.user.IdSpecialty &&
-		//												 u.Name.ToLower().Equals("endocrino"))?.Id &&
-		//			r.user.IdLevelNavigation.Name.ToUpper().Equals("R3"))
-		//		{
-		//			//todos los de la misma unidad de R5 deben ir a posibles
-		//			day.possible.AddRange(userStats.Where(u => u.user.IdLevelNavigation.Name.ToUpper().Equals("R4") &&
-		//													   u.user.IdUnity == r.user.IdUnity &&
-		//													   !day.absents.Keys.Contains(u.user) &&
-		//													   !day.possible.Contains(u.user) &&
-		//													   !day.assigned.Contains(u.user))
-		//										   .Select(u => u.user));
-
-		//		}
-		//		if (r.user.IdUnity == unities.First(u => u.IdSpecialty == r.user.IdSpecialty &&
-		//												 u.Name.ToLower().Equals("endocrino"))?.Id &&
-		//			r.user.IdLevelNavigation.Name.ToUpper().Equals("R4"))
-		//		{
-		//			//todos los de la misma unidad de R4 deben ir a posibles
-		//			day.possible.AddRange(userStats.Where(u => u.user.IdLevelNavigation.Name.ToUpper().Equals("R3") &&
-		//													   u.user.IdUnity == r.user.IdUnity &&
-		//													   !day.absents.Keys.Contains(u.user) &&
-		//													   !day.possible.Contains(u.user) &&
-		//													   !day.assigned.Contains(u.user))
-		//										   .Select(u => u.user));
-		//		}
-		//	}
-
-		//	//R8 Evitar tripletes y cuatrupletes aunque técnicamente se puede
-		//	//tripletes
-		//	if (assignedDays.Find(d => d.day == day.day.AddDays(2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(-2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id) &&
-		//					   !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(-2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id) &&
-		//						   !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//		if (days.Exists(d => d.day == day.day.AddDays(4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//	}
-		//	if ((assignedDays.Find(d => d.day == day.day.AddDays(4) && d.assigned.Exists(u => u.Id == r.user.Id)) != null) &&
-		//	   (days.Exists(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id))))
-		//	{
-		//		days.Find(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//	}
-
-		//	if (assignedDays.Find(d => d.day == day.day.AddDays(-2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//		if (days.Exists(d => d.day == day.day.AddDays(-4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(-4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//	}
-		//	if ((assignedDays.Find(d => d.day == day.day.AddDays(-4) && d.assigned.Exists(u => u.Id == r.user.Id)) != null) &&
-		//	   (days.Exists(d => d.day == day.day.AddDays(-2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						 !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						 && !d.possible.Exists(u => u.Id == r.user.Id))))
-		//	{
-		//		days.Find(d => d.day == day.day.AddDays(-2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						!d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						&& !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//	}
-
-		//	//cuatrupletes
-		//	if (assignedDays.Find(d => d.day == day.day.AddDays(2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null &&
-		//		assignedDays.Find(d => d.day == day.day.AddDays(4) && d.assigned.Exists(u => u.Id == r.user.Id)) != null)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(6) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(6) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//		if (days.Exists(d => d.day == day.day.AddDays(-2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(-2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//	}
-		//	if ((assignedDays.Find(d => d.day == day.day.AddDays(2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null &&
-		//		assignedDays.Find(d => d.day == day.day.AddDays(6) && d.assigned.Exists(u => u.Id == r.user.Id)) != null) &&
-		//	   (days.Exists(d => d.day == day.day.AddDays(4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						 !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						 && !d.possible.Exists(u => u.Id == r.user.Id))))
-		//	{
-		//		days.Find(d => d.day == day.day.AddDays(4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						!d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						&& !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//	}
-		//	if ((assignedDays.Find(d => d.day == day.day.AddDays(4) && d.assigned.Exists(u => u.Id == r.user.Id)) != null &&
-		//		assignedDays.Find(d => d.day == day.day.AddDays(6) && d.assigned.Exists(u => u.Id == r.user.Id)) != null) &&
-		//	   (days.Exists(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id))))
-		//	{
-		//		days.Find(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						!d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						&& !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//	}
-
-		//	if (assignedDays.Find(d => d.day == day.day.AddDays(2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null &&
-		//		assignedDays.Find(d => d.day == day.day.AddDays(-2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//		if (days.Exists(d => d.day == day.day.AddDays(-4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(-4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//	}
-		//	if ((assignedDays.Find(d => d.day == day.day.AddDays(-2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null &&
-		//		assignedDays.Find(d => d.day == day.day.AddDays(4) && d.assigned.Exists(u => u.Id == r.user.Id)) != null) &&
-		//	   (days.Exists(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						!d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						&& !d.possible.Exists(u => u.Id == r.user.Id))))
-		//	{
-		//		days.Find(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						!d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						&& !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//	}
-
-		//	if (assignedDays.Find(d => d.day == day.day.AddDays(-2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null &&
-		//		assignedDays.Find(d => d.day == day.day.AddDays(-4) && d.assigned.Exists(u => u.Id == r.user.Id)) != null)
-		//	{
-		//		if (days.Exists(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//		if (days.Exists(d => d.day == day.day.AddDays(-6) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id)))
-		//		{
-		//			days.Find(d => d.day == day.day.AddDays(-6) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						   && !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//		}
-		//	}
-
-		//	if ((assignedDays.Find(d => d.day == day.day.AddDays(-4) && d.assigned.Exists(u => u.Id == r.user.Id)) != null &&
-		//		assignedDays.Find(d => d.day == day.day.AddDays(-6) && d.assigned.Exists(u => u.Id == r.user.Id)) != null) &&
-		//	   (days.Exists(d => d.day == day.day.AddDays(-2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						 !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						 && !d.possible.Exists(u => u.Id == r.user.Id))))
-		//	{
-		//		days.Find(d => d.day == day.day.AddDays(-2) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						!d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						&& !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//	}
-		//	if ((assignedDays.Find(d => d.day == day.day.AddDays(-2) && d.assigned.Exists(u => u.Id == r.user.Id)) != null &&
-		//		assignedDays.Find(d => d.day == day.day.AddDays(-6) && d.assigned.Exists(u => u.Id == r.user.Id)) != null) &&
-		//	   (days.Exists(d => d.day == day.day.AddDays(-4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//					   !d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//					   && !d.possible.Exists(u => u.Id == r.user.Id))))
-		//	{
-		//		days.Find(d => d.day == day.day.AddDays(-4) && !d.assigned.Exists(u => u.Id == r.user.Id) &&
-		//						!d.absents.Keys.ToList().Exists(u => u.Id == r.user.Id)
-		//						&& !d.possible.Exists(u => u.Id == r.user.Id))?.possible.Add(r.user);
-		//	}
-		//}
-
-		//private List<Day> CopyList(List<Day> list)
-		//{
-		//	List<Day> copyList = new List<Day>();
-
-		//	foreach (Day original in list)
-		//	{
-		//		copyList.Add((Day)original.Clone());
-		//	}
-
-		//	return copyList;
-		//}
-
 		#endregion
 		
 		#region backtracking
 
-		bool BacktrackingGuard(List<Day> days, List<UserStats> userStats, Day day, List<PublicHoliday> publicHolidays, List<Unity> unities, int level)
+		private bool BacktrackingGuard(List<Day> days, List<UserStats> userStats, Day day, List<PublicHoliday> publicHolidays, List<Unity> unities)
 		{
 			if(!days.Exists(d => d.assigned.Count < 6))
 			{
@@ -946,9 +544,22 @@ namespace onGuardManager.Bussiness.Service
 			{
 				if(day.assigned.Count == 6)
 				{
-					//buscamos el siguiente día 
-					Day newDay = OrderDays(days, publicHolidays);
-					return BacktrackingGuard(days, userStats, newDay, publicHolidays, unities, 1);
+					if(BacktrackingGuard(days, userStats, OrderDaysAbsent(days, publicHolidays), publicHolidays, unities))
+					{
+						return true;
+					}
+					else if (BacktrackingGuard(days, userStats, OrderDaysAbsentPossible(days, publicHolidays), publicHolidays, unities))
+					{
+						return true;
+					}
+					else if (BacktrackingGuard(days, userStats, OrderDaysDescendingAbsent(days, publicHolidays), publicHolidays, unities))
+					{
+						return true;
+					}
+					else
+					{
+						return BacktrackingGuard(days, userStats, OrderDaysDescendingAbsentPossible(days, publicHolidays), publicHolidays, unities);
+					}
 				}
 				else
 				{
@@ -959,16 +570,12 @@ namespace onGuardManager.Bussiness.Service
 					//si el día es fin de semana o festivo se ordena por el que menos número de fines de semana y festivos tenga
 					users = GetUsersOrdered(userStats, day, publicHolidays);
 
-					//while(users.Count > 0)
 					foreach(UserStats us in users)
 					{
-						//UserStats us = users[0];
-						/*if (!day.possible.Contains(us.user))
-						{ */
 						day.assigned.Add(us.user);
 						UpdateStatics(us, day, publicHolidays);
 						UpdateAbsentsLists(days, day, us, unities, userStats, publicHolidays);
-						if (BacktrackingGuard(days, userStats, day, publicHolidays, unities, level == 5 ? 0 : level + 1))
+						if (BacktrackingGuard(days, userStats, day, publicHolidays, unities))
 						{
 							return true;
 						}
@@ -979,113 +586,71 @@ namespace onGuardManager.Bussiness.Service
 						{
 							day.absents.Add(us.user, "No llega a una solución final");
 						}
-							//users = GetUsersOrdered(level, users, day, publicHolidays);
-						//}
-
-						//users.Remove(us);
 					}
-
-					//probamos con los posibles
-					/*users = GetPossibleUsersOrdered(level, userStats, day, publicHolidays);
-					if(users.Count > 0)
-					{
-						//boramos los usuarios que se han descartado, puede que funcione
-						foreach (var pairvalue in day.absents.Where(d => d.Value.Equals("No llega a una solución final")))
-						{
-							day.absents.Remove(pairvalue.Key);
-						}
-					}
-					//users = GetUsersOrdered(level, userStats, day, publicHolidays);
-					//while (users.Count > 0)
-					foreach (UserStats us in users)
-					{
-						//UserStats us = users[0];
-						//if (day.possible.Contains(us.user))
-						//{
-							day.assigned.Add(us.user);
-							UpdateStatics(us, day, publicHolidays);
-							UpdateAbsentsLists(days, day, us, unities, userStats, publicHolidays);
-							UpdatePossiblesLists(days, day, us, unities, userStats);
-							if (BacktrackingGuard(days, userStats, day, publicHolidays, unities, level == 5? 0 : level + 1))
-							{
-								return true;
-							}
-							else
-							{
-								RevertStatics(us, day, publicHolidays);
-								RevertLists(days, day, us, unities, userStats, publicHolidays);
-								day.assigned.Remove(us.user);
-								if (!day.absents.ContainsKey(us.user))
-								{
-									day.absents.Add(us.user, "No llega a una solución final");
-								}
-							}
-							//users = GetUsersOrdered(level, users, day, publicHolidays);
-						//}
-
-						//users.Remove(us);
-					}*/
-
 					return false;
 				}
 			}
 		}
 
-		/*private List<UserStats> GetUsersOrdered(int level, List<UserStats>userStats, Day day, List<PublicHoliday> publicHolidays)
+		private bool ReorderUsers(List<Day> days, List<UserStats> userStats, List<PublicHoliday> publicHolidays, List<Unity> unities)
 		{
-			List<UserStats> users;
-			if(day.assigned.Count < 5)
-			{
-				//debemos escoger el usuario más óptimo cuyo nivel no esté ya en asignados
-				users = userStats.Where(u => !day.assigned.Select(a => a.Id).Contains(u.user.Id) &&
-											 !day.absents.Keys.Select(k => k.Id).Contains(u.user.Id) &&
-											 !day.possible.Keys.Select(a => a.Id).Contains(u.user.Id) &&
-											 !day.assigned.Select(a => a.IdLevel).Contains(u.user.IdLevel)).ToList();
-			}
-			else
-			{
-				//cogemos el usaurio más óptimo de los restantes
-				users = userStats.Where(u => !day.assigned.Select(a => a.Id).Contains(u.user.Id) &&
-											 !day.absents.Keys.Select(k => k.Id).Contains(u.user.Id) &&
-											 !day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
-			}
-			/*if (level != 0)
-			{
-				users = userStats.Where(u => u.user.IdLevelNavigation.Name == "R" + level &&
-											 !day.assigned.Select(a => a.Id).Contains(u.user.Id) &&
-											 !day.absents.Keys.Select(k => k.Id).Contains(u.user.Id) &&
-											 !day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
-			}
-			else
-			{
-				users = userStats.Where(u => !day.assigned.Select(a => a.Id).Contains(u.user.Id) &&
-											 !day.absents.Keys.Select(k => k.Id).Contains(u.user.Id) &&
-											 !day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
-			}*/
+			List<UserStats> userLessMin = userStats.Where(u => u.totalGuardMonth < 5).OrderBy(u => u.totalGuard).ToList();
+			List<UserStats> userMax = userStats.Where(u => u.totalGuardMonth == 6).ToList();
 
-		/*if(users.Count == 0)
-		{
-			if (day.assigned.Count < 5)
+			if (userMax.Any() && userLessMin.Any())
 			{
-				//debemos escoger el usuario más óptimo cuyo nivel no esté ya en asignados
-				users = userStats.Where(u => day.possible.Keys.Select(a => a.Id).Contains(u.user.Id) &&
-											 !day.assigned.Select(a => a.IdLevel).Contains(u.user.IdLevel)).ToList();
+				Dictionary<UserStats, List<Day>> dayUsers = new Dictionary<UserStats, List<Day>>();
+				foreach (UserStats us in userLessMin)
+				{
+					//cogemos los días que no contengan entre ausentes y asignados al usuario que hay que asignarle más días y que entre los asignados
+					//tenga alguno de los usuarios que tienen el máximo de guardias asignados
+					dayUsers.Add(us, days.Where(d => !d.absents.ContainsKey(us.user) &&
+													 !d.assigned.Contains(us.user) &&
+													 d.assigned.Intersect(userMax.Select(u => u.user)).Any() /*&&
+													 (((us.totalWeekendsMonth + us.totaPublicHolidaysMonth) < maxWeekends &&
+													  (d.day.DayOfWeek == DayOfWeek.Friday || d.day.DayOfWeek == DayOfWeek.Sunday || d.day.DayOfWeek == DayOfWeek.Saturday ||
+														publicHolidays.Select(ph => ph.Date).Contains(d.day))) ||
+													  (d.day.DayOfWeek != DayOfWeek.Friday && d.day.DayOfWeek != DayOfWeek.Sunday && d.day.DayOfWeek != DayOfWeek.Saturday &&
+														!publicHolidays.Select(ph => ph.Date).Contains(d.day)))*/).ToList());
+
+				}
+
+				List<KeyValuePair<UserStats, List<Day>>> dayUsersOrder = dayUsers.OrderBy(du => du.Value.Count).ToList();
+
+				List<Day> possibleDaysToChange = dayUsersOrder[0].Value;
+				UserStats selectedUser = dayUsersOrder[0].Key;
+				foreach (Day pdc in possibleDaysToChange)
+				{
+					List<User> possibleUserToChange = pdc.assigned.Intersect(userMax.Select(um => um.user)).ToList();
+					foreach(User puc in possibleUserToChange)
+					{
+						pdc.assigned.Remove(puc);
+						RevertStatics(userStats.First(us => us.user == puc), pdc, publicHolidays);
+						RevertLists(days, pdc, userStats.First(us => us.user == puc), unities, userStats, publicHolidays);
+						pdc.assigned.Add(selectedUser.user);
+						UpdateStatics(selectedUser, pdc, publicHolidays);
+						UpdateAbsentsLists(days, pdc, selectedUser, unities, userStats, publicHolidays);
+						if (ReorderUsers(days, userStats, publicHolidays, unities))
+						{
+							return true;
+						}
+						pdc.assigned.Remove(selectedUser.user);
+						RevertStatics(selectedUser, pdc, publicHolidays);
+						RevertLists(days, pdc, selectedUser, unities, userStats, publicHolidays);
+						pdc.assigned.Add(puc);
+						UpdateStatics(userStats.First(us => us.user == puc), pdc, publicHolidays);
+						UpdateAbsentsLists(days, pdc, userStats.First(us => us.user == puc), unities, userStats, publicHolidays);
+					}
+				}
+				
+				return false;
 			}
 			else
 			{
-				//cogemos el usaurio más óptimo de los restantes
-				users = userStats.Where(u => day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
+				return true;
 			}
 		}
-
-		users = (day.day.DayOfWeek == DayOfWeek.Saturday || day.day.DayOfWeek == DayOfWeek.Sunday
-				|| publicHolidays.Select(ph => ph.Date).Contains(day.day)) ?
-				users.OrderBy(us => us.totalWeekends + us.totaPublicHolidays).ToList() :
-				users.OrderBy(us => us.totalGuardMonth).ToList();
-
-		return users;
-	}*/
-
+		
 		private List<UserStats> GetUsersOrdered(List<UserStats> userStats, Day day, List<PublicHoliday> publicHolidays)
 		{
 			List<UserStats> users;
@@ -1121,57 +686,30 @@ namespace onGuardManager.Bussiness.Service
 				}
 			}
 
-			users = (day.day.DayOfWeek == DayOfWeek.Saturday || day.day.DayOfWeek == DayOfWeek.Sunday
+			users = (day.day.DayOfWeek == DayOfWeek.Saturday || day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Friday
 					|| publicHolidays.Select(ph => ph.Date).Contains(day.day)) ?
-					users.OrderBy(us => us.totalWeekends + us.totaPublicHolidays).ToList() :
+					users.OrderBy(us => us.totalWeekends + us.totaPublicHolidays).ThenBy(us => us.totalWeekendsMonth + us.totaPublicHolidaysMonth).ToList() :
 					users.OrderBy(us => us.totalGuardMonth).ToList();
 
 			return users;
 		}
 
-		//private List<UserStats> GetPossibleUsersOrdered(int level, List<UserStats> userStats, Day day, List<PublicHoliday> publicHolidays)
-		//{
-		//	List<UserStats> users;
-		//	if (day.assigned.Count < 5)
-		//	{
-		//		//debemos escoger el usuario más óptimo cuyo nivel no esté ya en asignados
-		//		users = userStats.Where(u => day.possible.Keys.Select(a => a.Id).Contains(u.user.Id) &&
-		//									 !day.assigned.Select(a => a.IdLevel).Contains(u.user.IdLevel)).ToList();
-		//	}
-		//	else
-		//	{
-		//		//cogemos el usaurio más óptimo de los restantes
-		//		users = userStats.Where(u => day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
-		//	}
-		//	/*if (level != 0)
-		//	{
-		//		users = userStats.Where(u => u.user.IdLevelNavigation.Name == "R" + level &&
-		//									 day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
-		//	}
-		//	else
-		//	{
-		//		users = userStats.Where(u => day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
-		//	}*/
-		//	users = (day.day.DayOfWeek == DayOfWeek.Saturday || day.day.DayOfWeek == DayOfWeek.Sunday
-		//			|| publicHolidays.Select(ph => ph.Date).Contains(day.day)) ?
-		//			users.OrderBy(us => us.totalWeekends + us.totaPublicHolidays).ToList() :
-		//			users.OrderBy(us => us.totalGuardMonth).ToList();
-
-		//	return users;
-		//}
-
 		private void UpdateStatics(UserStats us, Day day, List<PublicHoliday> publicHolidays)
 		{
 			//Se actualizan las estadísitcas del usuario
+			us.totalGuard++;
 			us.totalGuardMonth++;
-			if (day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Saturday)
+			if (day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Saturday || day.day.DayOfWeek == DayOfWeek.Friday)
 			{
 				us.totalWeekends++;
+				us.totalWeekendsMonth++;
 			}
 			//Si el día esta entre la lista de festivos se suma uno a los festivos
-			if (publicHolidays.Exists(ph => ph.Date == day.day) && day.day.DayOfWeek != DayOfWeek.Sunday && day.day.DayOfWeek != DayOfWeek.Saturday)
+			if (publicHolidays.Exists(ph => ph.Date == day.day) && day.day.DayOfWeek != DayOfWeek.Sunday && 
+				day.day.DayOfWeek != DayOfWeek.Saturday && day.day.DayOfWeek != DayOfWeek.Friday)
 			{
 				us.totaPublicHolidays++;
+				us.totaPublicHolidaysMonth++;
 			}
 		}
 
@@ -1269,40 +807,28 @@ namespace onGuardManager.Bussiness.Service
 			//R4 Máx 6 guardias por cabeza, aunque el máximo legal son 7
 			if (days.Count(d => d.assigned.Exists(u => u.Id == us.user.Id)) == totalGuards[(int)us.user.IdSpecialty])
 			{
-				//queda inelegible para el resto de días pero no para el propio
-				foreach (Day d in days.Where(d => d.day != day.day && !d.assigned.Contains(us.user)))
+				foreach (var d in				
+						 from Day d in days.Where(d => d.day != day.day && !d.assigned.Contains(us.user))
+						 where !d.absents.Keys.Contains(us.user)
+						 select d)
 				{
-					if (!d.absents.Keys.Contains(us.user))
-					{
-						d.absents.Add(us.user, totalGuards+" guardias asignadas");
-					}
+					//queda inelegible para el resto de días pero no para el propio
+					d.absents.Add(us.user, totalGuards + " guardias asignadas");
 				}
 			}
 
 			//si ha alcanzado al méximo de fines de semana/festivos queda ilegible para otros fines de semana y festivos
-			/*if(us.totalWeekends + us.totaPublicHolidays == maxWeekends)
+			/*if(us.totalWeekendsMonth + us.totaPublicHolidaysMonth == maxWeekends)
 			{
 				foreach(Day dd in days.Where(d => !d.assigned.Contains(us.user) &&
 												  !d.absents.Keys.Contains(us.user) && 
-												  (d.day.DayOfWeek == DayOfWeek.Saturday || d.day.DayOfWeek == DayOfWeek.Sunday ||
+												  (d.day.DayOfWeek == DayOfWeek.Saturday || d.day.DayOfWeek == DayOfWeek.Sunday || d.day.DayOfWeek == DayOfWeek.Friday ||
 												  publicHolidays.Select(ph => ph.Date).Contains(d.day))))
 				{
 					dd.absents.Add(us.user, "fines de semana máximos");
 				}
 			}*/
-			//R5 Siempre uno de cada año de guardia. Añadimos todos los residentes del mismo año que el elegido
-			//a la lista de inelegibles, salvo el que esté rotando.
-			/*decimal idRotatorio = unities.First(u => u.Name == "Rotatorio").Id;
-			foreach (User user in userStats.Where(u => u.user.IdLevel == us.user.IdLevel &&
-													  ((us.user.IdUnity != idRotatorio && u.user.IdUnity != idRotatorio) ||
-													   (us.user.IdUnity == idRotatorio && u.user.IdUnity == idRotatorio)) &&
-													  !day.assigned.Contains(u.user) &&
-													  !day.absents.Keys.Contains(u.user))
-										  .Select(u => u.user))
-			{
-				day.absents.Add(user, "nivel ya asignado al día");
-			}
-			*/
+
 			//si hubiera alguno de los inelegibles en la lista de posibles lo quitamos
 			foreach (User key in day.absents.Keys.Where(k => day.possible.ContainsKey(k)))
 			{
@@ -1312,26 +838,100 @@ namespace onGuardManager.Bussiness.Service
 			UpdatePossiblesLists(days, day, us, unities, userStats);
 		}
 
-		private Day OrderDays(List<Day> days, List<PublicHoliday> publicHolidays)
+		private Day OrderDaysAbsent(List<Day> days, List<PublicHoliday> publicHolidays)
 		{
 			//primero cogemos los festivos, sábados y domingos
 			/*Day? day = days.Where(d => d.assigned.Count < 6 &&
 							(d.day.DayOfWeek == DayOfWeek.Saturday ||
 							 d.day.DayOfWeek == DayOfWeek.Sunday ||
+							 d.day.DayOfWeek == DayOfWeek.Friday ||
 							 publicHolidays.Select(ph => ph.Date).Contains(d.day)))
-				.OrderBy(d => d.absents.Count).FirstOrDefault();
+				.OrderByDescending(d => d.absents.Count).FirstOrDefault();
 
 			if (day == null)
 			{
 				day = days.Where(d => d.assigned.Count < 6 &&
 									  d.day.DayOfWeek != DayOfWeek.Saturday &&
 									  d.day.DayOfWeek != DayOfWeek.Sunday &&
+									  d.day.DayOfWeek != DayOfWeek.Friday &&
 									  !publicHolidays.Select(ph => ph.Date).Contains(d.day))
-						  .OrderBy(d => d.absents.Count).First();
+						  .OrderByDescending(d => d.absents.Count).First();
+			}
+
+			return day;*/
+			return days.Where(d => d.assigned.Count < 6).OrderBy(d => d.absents.Count).First();
+		}
+
+		private Day OrderDaysDescendingAbsent(List<Day> days, List<PublicHoliday> publicHolidays)
+		{
+			//primero cogemos los festivos, sábados y domingos
+			/*Day? day = days.Where(d => d.assigned.Count < 6 &&
+							(d.day.DayOfWeek == DayOfWeek.Saturday ||
+							 d.day.DayOfWeek == DayOfWeek.Sunday ||
+							 d.day.DayOfWeek == DayOfWeek.Friday ||
+							 publicHolidays.Select(ph => ph.Date).Contains(d.day)))
+				.OrderByDescending(d => d.absents.Count).FirstOrDefault();
+
+			if (day == null)
+			{
+				day = days.Where(d => d.assigned.Count < 6 &&
+									  d.day.DayOfWeek != DayOfWeek.Saturday &&
+									  d.day.DayOfWeek != DayOfWeek.Sunday &&
+									  d.day.DayOfWeek != DayOfWeek.Friday &&
+									  !publicHolidays.Select(ph => ph.Date).Contains(d.day))
+						  .OrderByDescending(d => d.absents.Count).First();
 			}
 
 			return day;*/
 			return days.Where(d => d.assigned.Count < 6).OrderByDescending(d => d.absents.Count).First();
+		}
+
+		private Day OrderDaysAbsentPossible(List<Day> days, List<PublicHoliday> publicHolidays)
+		{
+			//primero cogemos los festivos, sábados y domingos
+			/*Day? day = days.Where(d => d.assigned.Count < 6 &&
+							(d.day.DayOfWeek == DayOfWeek.Saturday ||
+							 d.day.DayOfWeek == DayOfWeek.Sunday ||
+							 d.day.DayOfWeek == DayOfWeek.Friday ||
+							 publicHolidays.Select(ph => ph.Date).Contains(d.day)))
+				.OrderByDescending(d => d.absents.Count).FirstOrDefault();
+
+			if (day == null)
+			{
+				day = days.Where(d => d.assigned.Count < 6 &&
+									  d.day.DayOfWeek != DayOfWeek.Saturday &&
+									  d.day.DayOfWeek != DayOfWeek.Sunday &&
+									  d.day.DayOfWeek != DayOfWeek.Friday &&
+									  !publicHolidays.Select(ph => ph.Date).Contains(d.day))
+						  .OrderByDescending(d => d.absents.Count).First();
+			}
+
+			return day;*/
+			return days.Where(d => d.assigned.Count < 6).OrderBy(d => d.absents.Count + d.possible.Count).First();
+		}
+
+		private Day OrderDaysDescendingAbsentPossible(List<Day> days, List<PublicHoliday> publicHolidays)
+		{
+			//primero cogemos los festivos, sábados y domingos
+			/*Day? day = days.Where(d => d.assigned.Count < 6 &&
+							(d.day.DayOfWeek == DayOfWeek.Saturday ||
+							 d.day.DayOfWeek == DayOfWeek.Sunday ||
+							 d.day.DayOfWeek == DayOfWeek.Friday ||
+							 publicHolidays.Select(ph => ph.Date).Contains(d.day)))
+				.OrderByDescending(d => d.absents.Count).FirstOrDefault();
+
+			if (day == null)
+			{
+				day = days.Where(d => d.assigned.Count < 6 &&
+									  d.day.DayOfWeek != DayOfWeek.Saturday &&
+									  d.day.DayOfWeek != DayOfWeek.Sunday &&
+									  d.day.DayOfWeek != DayOfWeek.Friday &&
+									  !publicHolidays.Select(ph => ph.Date).Contains(d.day))
+						  .OrderByDescending(d => d.absents.Count).First();
+			}
+
+			return day;*/
+			return days.Where(d => d.assigned.Count < 6).OrderByDescending(d => d.absents.Count + d.possible.Count).First();
 		}
 
 		private void UpdatePossiblesLists(List<Day> days, Day day, UserStats us, List<Unity> unities, List<UserStats> userStats)
@@ -1661,15 +1261,19 @@ namespace onGuardManager.Bussiness.Service
 		private void RevertStatics(UserStats us, Day day, List<PublicHoliday> publicHolidays)
 		{
 			//Se actualizan las estadísitcas del usuario
+			us.totalGuard--;
 			us.totalGuardMonth--;
-			if (day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Saturday)
+			if (day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Saturday || day.day.DayOfWeek == DayOfWeek.Friday)
 			{
 				us.totalWeekends--;
+				us.totalWeekendsMonth--;
 			}
 			//Si el día esta entre la lista de festivos se suma uno a los festivos
-			if (publicHolidays.Exists(ph => ph.Date == day.day) && day.day.DayOfWeek != DayOfWeek.Sunday && day.day.DayOfWeek != DayOfWeek.Saturday)
+			if (publicHolidays.Exists(ph => ph.Date == day.day) && day.day.DayOfWeek != DayOfWeek.Sunday && 
+				day.day.DayOfWeek != DayOfWeek.Saturday && day.day.DayOfWeek != DayOfWeek.Friday)
 			{
 				us.totaPublicHolidays--;
+				us.totaPublicHolidaysMonth--;
 			}
 		}
 
@@ -1799,33 +1403,17 @@ namespace onGuardManager.Bussiness.Service
 			}
 
 			//si ha alcanzado al méximo de fines de semana/festivos queda ilegible para otros fines de semana y festivos
-			/*if (us.totalWeekends + us.totaPublicHolidays == maxWeekends)
+			/*if (us.totalWeekendsMonth + us.totaPublicHolidaysMonth == maxWeekends)
 			{
 				foreach (Dictionary<User, string> dd in days.Where(d => d.absents.ContainsKey(us.user) &&
 												   d.absents[us.user] == "fines de semana máximos" &&
-												  (d.day.DayOfWeek == DayOfWeek.Saturday || d.day.DayOfWeek == DayOfWeek.Sunday ||
+												  (d.day.DayOfWeek == DayOfWeek.Saturday || d.day.DayOfWeek == DayOfWeek.Sunday || d.day.DayOfWeek == DayOfWeek.Friday ||
 												  publicHolidays.Select(ph => ph.Date).Contains(d.day))).Select(d => d.absents))
 				{
 					dd.Remove(us.user);
 				}
-			}
-			*/
-			//R5 Siempre uno de cada año de guardia. Añadimos todos los residentes del mismo año que el elegido
-			//a la lista de inelegibles, salvo el que esté rotando.
-			/*decimal idRotatorio = unities.First(u => u.Name == "Rotatorio").Id;
-			foreach (User user in userStats.Where(u => u.user.IdLevel == us.user.IdLevel &&
-													  ((us.user.IdUnity != idRotatorio && u.user.IdUnity != idRotatorio) ||
-													   (us.user.IdUnity == idRotatorio && u.user.IdUnity == idRotatorio)) &&
-													  day.assigned.Contains(u.user) &&
-													  !day.absents.Keys.Contains(u.user))
-										  .Select(u => u.user))
-			{
-				if (day.absents.Contains(user) && day.absents[user] == "nivel ya asignado al día")
-				{
-					day.absents.Remove(user);
-				}
 			}*/
-
+			
 			//R6 R5 y R4 de la misma unidad no deberían coincidir a ser posible.
 			if (us.user.IdLevelNavigation.Name.ToUpper().Equals("R4"))
 			{
@@ -2052,193 +1640,6 @@ namespace onGuardManager.Bussiness.Service
 			//Se comprueba si hay que añadir algún user a posibles
 			UpdatePossiblesLists(days, day, us, unities, userStats);
 		}
-
-		
-		/*bool Backtracking(Dia[] calendario, List<Usuario> usuarios, int dia)
-		{
-			if (dia == DiasMes)
-			{
-				return true; // Se ha asignado usuarios para todos los días
-			}
-
-			Dia diaActual = calendario[dia];
-
-			if (diaActual.UsuariosAsignados.Count == 6)
-			{
-				return Backtracking(calendario, usuarios, dia + 1);
-			}
-
-			// Lista de usuarios elegibles
-			var elegibles = usuarios
-				.Where(u => !diaActual.UsuariosProhibidos.Contains(u) && !diaActual.UsuariosAsignados.Contains(u))
-				.OrderBy(u => u.GuardiasFinesDeSemana)
-				.ThenBy(u => u.GuardiasAsignadas)
-				.ToList();
-
-			foreach (var usuario in elegibles)
-			{
-				if (VerificarRestriccionesUsuario(usuario, dia, calendario))
-				{
-					diaActual.UsuariosAsignados.Add(usuario);
-					usuario.GuardiasAsignadas++;
-					if (EsFinDeSemana(dia) || DiasFestivos.Contains(dia))
-					{
-						usuario.GuardiasFinesDeSemana++;
-					}
-					ActualizarRestricciones(calendario, dia, usuario);
-
-					if (Backtracking(calendario, usuarios, dia))
-					{
-						return true;
-					}
-
-					diaActual.UsuariosAsignados.Remove(usuario);
-					usuario.GuardiasAsignadas--;
-					if (EsFinDeSemana(dia) || DiasFestivos.Contains(dia))
-					{
-						usuario.GuardiasFinesDeSemana--;
-					}
-					RevertirRestricciones(calendario, dia, usuario);
-				}
-			}
-
-			// Si no se pudo asignar con los elegibles, probar con los posibles
-			var posibles = diaActual.UsuariosPosibles
-				.OrderBy(u => u.GuardiasFinesDeSemana)
-				.ThenBy(u => u.GuardiasAsignadas)
-				.ToList();
-
-			foreach (var usuario in posibles)
-			{
-				if (VerificarRestriccionesUsuario(usuario, dia, calendario))
-				{
-					diaActual.UsuariosAsignados.Add(usuario);
-					usuario.GuardiasAsignadas++;
-					if (EsFinDeSemana(dia) || DiasFestivos.Contains(dia))
-					{
-						usuario.GuardiasFinesDeSemana++;
-					}
-					ActualizarRestricciones(calendario, dia, usuario);
-
-					if (Backtracking(calendario, usuarios, dia))
-					{
-						return true;
-					}
-
-					diaActual.UsuariosAsignados.Remove(usuario);
-					usuario.GuardiasAsignadas--;
-					if (EsFinDeSemana(dia) || DiasFestivos.Contains(dia))
-					{
-						usuario.GuardiasFinesDeSemana--;
-					}
-					RevertirRestricciones(calendario, dia, usuario);
-				}
-			}
-
-			return false;
-		}
-
-		static void ActualizarRestricciones(Dia[] calendario, int dia, Usuario usuario)
-		{
-			// Añadir a la lista de prohibidos los usuarios que incumplen restricciones
-			if (dia + 1 < DiasMes)
-			{
-				calendario[dia + 1].UsuariosProhibidos.Add(usuario);
-			}
-
-			if (dia + 2 < DiasMes)
-			{
-				if ((dia % 7 == 4) || (dia % 7 == 5))
-				{
-					calendario[dia + 2].UsuariosProhibidos.Add(usuario);
-				}
-			}
-
-			if (dia + 3 < DiasMes && dia % 7 == 5)
-			{
-				calendario[dia + 3].UsuariosProhibidos.Add(usuario);
-			}
-
-			for (int i = dia + 1; i < DiasMes; i++)
-			{
-				if (calendario[i].UsuariosAsignados.Count < 6)
-				{
-					calendario[i].UsuariosProhibidos.Add(usuario);
-				}
-			}
-		}
-
-		static void RevertirRestricciones(Dia[] calendario, int dia, Usuario usuario)
-		{
-			// Revertir las restricciones añadidas
-			if (dia + 1 < DiasMes)
-			{
-				calendario[dia + 1].UsuariosProhibidos.Remove(usuario);
-			}
-
-			if (dia + 2 < DiasMes)
-			{
-				if ((dia % 7 == 4) || (dia % 7 == 5))
-				{
-					calendario[dia + 2].UsuariosProhibidos.Remove(usuario);
-				}
-			}
-
-			if (dia + 3 < DiasMes && dia % 7 == 5)
-			{
-				calendario[dia + 3].UsuariosProhibidos.Remove(usuario);
-			}
-
-			for (int i = dia + 1; i < DiasMes; i++)
-			{
-				if (calendario[i].UsuariosAsignados.Count < 6)
-				{
-					calendario[i].UsuariosProhibidos.Remove(usuario);
-				}
-			}
-		}
-
-		static bool VerificarRestriccionesUsuario(Usuario usuario, int dia, Dia[] calendario)
-		{
-			if (usuario.DiasVacaciones.Contains(dia))
-			{
-				return false;
-			}
-
-			if (usuario.GuardiasAsignadas >= 6)
-			{
-				return false;
-			}
-
-			if (EsFinDeSemana(dia) || DiasFestivos.Contains(dia))
-			{
-				if (usuario.GuardiasFinesDeSemana >= 2)
-				{
-					return false;
-				}
-			}
-
-			if (dia > 0 && calendario[dia - 1].UsuariosAsignados.Contains(usuario))
-			{
-				return false;
-			}
-
-			if (dia > 1)
-			{
-				if ((dia % 7 == 4 && dia + 2 < DiasMes && calendario[dia + 2].UsuariosAsignados.Contains(usuario)) ||
-					(dia % 7 == 5 && dia + 3 < DiasMes && calendario[dia + 3].UsuariosAsignados.Contains(usuario)))
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		static bool EsFinDeSemana(int dia)
-		{
-			return (dia % 7 == 5 || dia % 7 == 6); // 5: Sábado, 6: Domingo
-		}*/
 
 		#endregion
 	}

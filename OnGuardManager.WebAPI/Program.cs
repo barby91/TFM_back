@@ -8,9 +8,10 @@ using onGuardManager.Data.Repository;
 using onGuardManager.Logger;
 using System.Text;
 using onGuardManager.Models.Entities;
-using Swashbuckle.AspNetCore.SwaggerUI;
-using Microsoft.OpenApi.Models;
-using System.Reflection;
+using Amazon.SecretsManager.Extensions.Caching;
+using Amazon.SecretsManager.Model;
+using Amazon.SecretsManager;
+using Amazon;
 
 try
 {
@@ -43,10 +44,14 @@ try
 	});
 
 	builder.Services.AddControllersWithViews();
-	builder.Services.AddDbContext<OnGuardManagerContext>(opciones =>
+	
+	builder.Services.AddDbContext<OnGuardManagerContext>(async opciones =>
 	{
-		//await AwsProperties.GetSecret();
+#if DEBUG
+		opciones.UseSqlServer(builder.Configuration.GetConnectionString("cadenaSQLDev"));
+#else
 		opciones.UseSqlServer(builder.Configuration.GetConnectionString("cadenaSQL"));
+#endif
 	});
 
 	#region inyección de repositorios
