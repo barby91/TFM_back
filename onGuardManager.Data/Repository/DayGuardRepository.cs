@@ -39,27 +39,17 @@ namespace onGuardManager.Data.Repository
 			}
 		}
 
-		public async Task<bool> DeletePreviousGuard(int month)
+		public async Task<bool> DeletePreviousGuard(DateOnly initialDate, DateOnly finalDate)
 		{
 			try
 			{
-				if (month > 0)
-				{
-					_context.DayGuards.RemoveRange(await _context.DayGuards
-																	.Include(dg => dg.assignedUsers)
-																	.ThenInclude(au => au.IdUnityNavigation)
-																	 .Where(dg => dg.Day.Month == month &&
-																				  dg.Day.Year == DateTime.Now.Year)
-																	 .ToListAsync());
-				}
-				else
-				{
-					month = DateTime.Now.Month + 1;
-					_context.DayGuards.RemoveRange(await _context.DayGuards
-																	 .Where(dg => dg.Day.Month >= month &&
-																				  dg.Day.Year == DateTime.Now.Year)
-																	 .ToListAsync());
-				}
+				_context.DayGuards.RemoveRange(await _context.DayGuards
+																.Include(dg => dg.assignedUsers)
+																.ThenInclude(au => au.IdUnityNavigation)
+																.Where(dg => dg.Day.CompareTo(initialDate) >= 0 &&
+																			 dg.Day.CompareTo(finalDate) <= 0 &&
+																			 dg.Day.Year == DateTime.Now.Year)
+																.ToListAsync());
 				return await _context.SaveChangesAsync() >= 0;
 			}
 			catch (Exception ex)

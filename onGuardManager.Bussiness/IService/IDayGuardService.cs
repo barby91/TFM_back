@@ -26,7 +26,7 @@ namespace onGuardManager.Bussiness.IService
 		/// </summary>
 		/// <param name="month"></param>
 		/// <returns></returns>
-		Task<bool> DeletePreviousGuard(int month);
+		Task<bool> DeletePreviousGuard(GuardInterval guardInterval);
 
 		Task<string> GetUserStats(GuardRequest guardRequest);
 
