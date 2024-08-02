@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\onGuardManager.Data\onGuardManager.Data.csproj" />
     <ProjectReference Include="..\onGuardManager.Models\onGuardManager.Models.Entities.csproj" />
   </ItemGroup>
 

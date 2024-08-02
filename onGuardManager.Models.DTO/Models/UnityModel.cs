@@ -13,6 +13,10 @@ public class UnityModel
     public string Description { get; set; } = null!;
 
 	public decimal? IdSpecialty { get; set; }
+
+	public decimal? MaxByDay { get; set; }
+
+	public decimal? MaxByDayWeekend { get; set; }
 	#endregion
 
 	#region constructor
@@ -24,6 +28,8 @@ public class UnityModel
 		Name = unity.Name;
 		Description = unity.Description;
 		IdSpecialty = unity.IdSpecialty;
+		MaxByDay = unity.MaxByDay;
+		MaxByDay = unity.MaxByDayWeekend;
 	}
 	#endregion
 
@@ -35,7 +41,9 @@ public class UnityModel
 			Id = this.Id,
 			Name = this.Name,
 			Description = this.Description,
-			IdSpecialty = this.IdSpecialty
+			IdSpecialty = this.IdSpecialty,
+			MaxByDay = this.MaxByDay,
+			MaxByDayWeekend = this.MaxByDayWeekend
 		};
 	}
 	#endregion

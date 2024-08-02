@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using onGuardManager.Models.Entities;
 
 namespace onGuardManager.Data.DataContext;
@@ -34,7 +32,7 @@ public partial class OnGuardManagerContext : DbContext
 
     public virtual DbSet<Rol> Rols { get; set; }
 
-    //public virtual DbSet<Rule> Rules { get; set; }
+    //  public virtual DbSet<Rule> Rules { get; set; }
 
     public virtual DbSet<Specialty> Specialties { get; set; }
 
@@ -42,8 +40,8 @@ public partial class OnGuardManagerContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AskedHoliday>(entity =>
         {
@@ -87,8 +85,8 @@ public partial class OnGuardManagerContext : DbContext
                 .ValueGeneratedOnAdd()
                 .HasColumnType("numeric(18, 0)");
 
-            entity.HasMany(d => d.assignedUsers).WithMany(p => p.dayGuardsAssigned)
-                .UsingEntity<Dictionary<string, object>>(
+			entity.HasMany(d => d.assignedUsers).WithMany(p => p.dayGuardsAssigned)
+			   .UsingEntity<Dictionary<string, object>>(
                     "DayGuardUser",
                     r => r.HasOne<User>().WithMany()
                         .HasForeignKey("IdUser")
@@ -245,6 +243,8 @@ public partial class OnGuardManagerContext : DbContext
                 .HasColumnType("numeric(18, 0)");
             entity.Property(e => e.Description).HasMaxLength(150);
             entity.Property(e => e.IdSpecialty).HasColumnType("numeric(18, 0)");
+            entity.Property(e => e.MaxByDay).HasColumnType("numeric(18, 0)");
+            entity.Property(e => e.MaxByDayWeekend).HasColumnType("numeric(18, 0)");
             entity.Property(e => e.Name).HasMaxLength(50);
 
             entity.HasOne(d => d.IdSpecialtyNavigation).WithMany(p => p.Unities)

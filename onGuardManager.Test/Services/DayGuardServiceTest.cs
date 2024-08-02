@@ -2,6 +2,7 @@
 using onGuardManager.Bussiness.IService;
 using onGuardManager.Bussiness.Service;
 using onGuardManager.Data.IRepository;
+using onGuardManager.Models.DTO.Entities;
 using onGuardManager.Models.DTO.Models;
 using onGuardManager.Models.Entities;
 using Assert = NUnit.Framework.Assert;
@@ -77,14 +78,15 @@ namespace onGuardManager.Test.Repository
 		
 		[TestCaseSource(nameof(GetDeleteGuardsCase))]
 		[Test]
-		public void DayGuardServiceTestDeletePreviousGuard(int month, bool expected)
+		public void DayGuardServiceTestDeletePreviousGuard(GuardInterval guardInterval, bool expected)
 		{
 			#region Arrange
-			_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<int>())).ReturnsAsync(expected);
+			_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).ReturnsAsync(expected);
 			#endregion
 
 			#region Actual
-			bool actual = _serviceDayGuard.DeletePreviousGuard(month).Result;
+			
+			bool actual = _serviceDayGuard.DeletePreviousGuard(guardInterval).Result;
 			#endregion
 
 			#region Assert
@@ -96,10 +98,14 @@ namespace onGuardManager.Test.Repository
 		public void DayGuardServiceTestGetlDeletePreviousGuardException()
 		{
 			#region Arrange
-			_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<int>())).Throws(() => new Exception());
+			_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).Throws(() => new Exception());
 			#endregion
 
-			Assert.ThrowsAsync<Exception>(async() => await _serviceDayGuard.DeletePreviousGuard(1));
+			Assert.ThrowsAsync<Exception>(async() => await _serviceDayGuard.DeletePreviousGuard(new GuardInterval() { 
+																										firstDayInterval = It.IsAny<DateOnly>(),
+																										lastDayInterval = It.IsAny<DateOnly>()
+																									}
+			));
 		}
 
 		[TestCaseSource(nameof(GetUserStatsCase))]
@@ -128,7 +134,7 @@ namespace onGuardManager.Test.Repository
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2024, 10)).ReturnsAsync(GetFakeDayGuards().Where(dg => dg.Day.Month == 10).ToList());
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2024, 11)).ReturnsAsync(GetFakeDayGuards().Where(dg => dg.Day.Month == 11).ToList());
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2024, 12)).ReturnsAsync(GetFakeDayGuards().Where(dg => dg.Day.Month == 12).ToList());
-			_dayGuardRepository.Setup(dg => dg.DeletePreviousGuard(It.IsAny<int>())).ReturnsAsync(DeleteGuardReturn);
+			_dayGuardRepository.Setup(dg => dg.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).ReturnsAsync(DeleteGuardReturn);
 			_dayGuardRepository.Setup(dg => dg.SaveGuard(It.IsAny<DayGuard>())).ReturnsAsync(SaveGuardReturn);
 			#endregion
 
@@ -139,8 +145,6 @@ namespace onGuardManager.Test.Repository
 			#region Assert
 			Assert.That(actual.Contains(expected), Is.EqualTo(true));
 			#endregion
-
-
 		}
 
 		[TestCaseSource(nameof(GetGuardsCase))]
@@ -1172,7 +1176,7 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					month = 1
+					groupOfWeeks = 1
 				}, "OK", GetFakeUserWithHolidays(), true, true
 			},
 			new object[]
@@ -1181,7 +1185,7 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					month = 1
+					groupOfWeeks = 1
 				}, "OK", GetFakeUserWithHolidays(), true, true
 			},
 			new object[]
@@ -1190,7 +1194,7 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					month = 2
+					groupOfWeeks = 2
 				}, "OK", GetFakeUserWithHolidays(), true, true
 			},
 			new object[]
@@ -1199,8 +1203,8 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					month = 0
-				}, "OK", GetFakeUserWithHolidays(), true, true
+					groupOfWeeks = 0
+				}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidays(), true, true
 			},
 			new object[]
 			{
@@ -1208,8 +1212,8 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					month = 0
-				}, "OK", GetFakeUserWithHolidays(), true, true
+					groupOfWeeks = 0
+				}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidays(), true, true
 			},
 			new object[]
 			{
@@ -1217,7 +1221,7 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					month = 2
+					groupOfWeeks = 2
 				}, "Error al guardar la guardia", GetFakeUserWithHolidays(), false, true
 			},
 			new object[]
@@ -1226,7 +1230,7 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					month = 2
+					groupOfWeeks = 2
 				}, "Error al borrar la guardia previamente calculada", GetFakeUserWithHolidays(), false, false
 			},
 			new object[]
@@ -1235,8 +1239,8 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					month = 1
-				}, "No se pueden asignar las guardias del mes", GetFake30UserWithHolidays(), true, true
+					groupOfWeeks = 1
+				}, "No se pueden asignar las guardias del grupo de semanas ", GetFake30UserWithHolidays(), true, true
 			},
 			new object[]
 			{
@@ -1244,8 +1248,8 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					month = 1
-				}, "No se pueden asignar las guardias del mes", GetFake30UserWithHolidays(), true, true
+					groupOfWeeks = 1
+				}, "No se pueden asignar las guardias del grupo de semanas ", GetFake30UserWithHolidays(), true, true
 			},
 			new object[]
 			{
@@ -1253,8 +1257,8 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					month = 2
-				}, "No se pueden asignar las guardias del mes", GetFake30UserWithHolidays(), true, true
+					groupOfWeeks = 2
+				}, "No se pueden asignar las guardias del grupo de semanas ", GetFake30UserWithHolidays(), true, true
 			},
 			new object[]
 			{
@@ -1262,8 +1266,8 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					month = 0
-				}, "No se pueden asignar las guardias del mes", GetFake30UserWithHolidays(), true, true
+					groupOfWeeks = 0
+				}, "No se pueden asignar las guardias del grupo de semanas ", GetFake30UserWithHolidays(), true, true
 			},
 			new object[]
 			{
@@ -1271,16 +1275,23 @@ namespace onGuardManager.Test.Repository
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					month = 0
-				}, "No se pueden asignar las guardias del mes", GetFake30UserWithHolidays(), true, true
+					groupOfWeeks = 0
+				}, "No se pueden asignar las guardias del grupo de semanas ", GetFake30UserWithHolidays(), true, true
 			}
 		};
 
 		private static object[] GetDeleteGuardsCase =
 		{
-			new object[] {1, true},
-			new object[] {0, true},
-			new object[] {12, true},
+			new object[] { new GuardInterval()
+			{
+				firstDayInterval = new DateOnly(2024, 1, 1),
+				lastDayInterval = new DateOnly(2024, 1, 28)
+			}, true},
+			new object[] { new GuardInterval()
+			{
+				firstDayInterval = new DateOnly(2024, 12, 30),
+				lastDayInterval =  new DateOnly(2025, 1, 26)
+			}, true},
 		};
 
 		private static object[] GetGuardsCase =

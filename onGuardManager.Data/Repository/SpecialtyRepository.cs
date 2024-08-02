@@ -232,6 +232,8 @@ namespace onGuardManager.Data.Repository
 						{
 							currentSpecialty.Unities.First(u => u.Id == unity.Id).Name = unity.Name;
 							currentSpecialty.Unities.First(u => u.Id == unity.Id).Description = unity.Description;
+							currentSpecialty.Unities.First(u => u.Id == unity.Id).MaxByDay = unity.MaxByDay;
+							currentSpecialty.Unities.First(u => u.Id == unity.Id).MaxByDayWeekend = unity.MaxByDayWeekend;
 						}
 					}
 

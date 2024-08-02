@@ -8,10 +8,6 @@ using onGuardManager.Data.Repository;
 using onGuardManager.Logger;
 using System.Text;
 using onGuardManager.Models.Entities;
-using Amazon.SecretsManager.Extensions.Caching;
-using Amazon.SecretsManager.Model;
-using Amazon.SecretsManager;
-using Amazon;
 
 try
 {
@@ -21,14 +17,23 @@ try
 
 	builder.Services.AddCors(options =>
 	{
+#if DEBUG
 		options.AddPolicy(name: "AllowOrigin",
 						  policy =>
 						  {
-							  policy.WithOrigins("https://localhost:44351", "http://localhost:4200",
-												 "https://main.dvoyy061ycswa.amplifyapp.com")
+							  policy.WithOrigins("https://localhost:44351", "http://localhost:4200")
 									.AllowAnyHeader()
 									.AllowAnyMethod();
 						  });
+#else
+		options.AddPolicy(name: "AllowOrigin",
+						  policy =>
+						  {
+							  policy.WithOrigins("https://main.dvoyy061ycswa.amplifyapp.com")
+									.AllowAnyHeader()
+									.AllowAnyMethod();
+						  });
+#endif
 	});
 
 	builder.Logging.ClearProviders();

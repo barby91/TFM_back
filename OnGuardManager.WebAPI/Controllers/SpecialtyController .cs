@@ -71,7 +71,7 @@ namespace OnGuardManager.WebAPI.Controllers
 		}
 
 		[HttpPost("{idCenter}")]
-		public async Task<IActionResult> SaveUsers(int idCenter, [FromForm] IFormFile file)
+		public async Task<IActionResult> SaveSpecialties(int idCenter, [FromForm] IFormFile file)
 		{
 			try
 			{

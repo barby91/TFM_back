@@ -78,10 +78,10 @@ namespace onGuardManager.Test.Repository
 		
 		[TestCaseSource(nameof(GetDeleteGuardsCase))]
 		[Test]
-		public void DayGuardRepositoryTestDeletePreviousGuard(int month, bool expected)
+		public void DayGuardRepositoryTestDeletePreviousGuard(DateOnly initDate, DateOnly finalDate, bool expected)
 		{
 			#region Actual
-			bool actual = _dayGuardRepository.DeletePreviousGuard(month).Result;
+			bool actual = _dayGuardRepository.DeletePreviousGuard(initDate, finalDate).Result;
 			#endregion
 
 			#region Assert
@@ -96,7 +96,7 @@ namespace onGuardManager.Test.Repository
 			dbContext.Setup(x => x.SaveChangesAsync(default)).Callback(() => throw new Exception());
 			#endregion
 
-			Assert.ThrowsAsync<Exception>(async() => await _dayGuardRepository.DeletePreviousGuard(1));
+			Assert.ThrowsAsync<Exception>(async() => await _dayGuardRepository.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>()));
 		}
 		
 		[TestCaseSource(nameof(GetGuardsCase))]
@@ -218,9 +218,8 @@ namespace onGuardManager.Test.Repository
 
 		private static object[] GetDeleteGuardsCase =
 		{
-			new object[] {1, true},
-			new object[] {0, true},
-			new object[] {12, true},
+			new object[] {new DateOnly(2024, 1, 1), new DateOnly(2024, 1, 28), true},
+			new object[] {new DateOnly(2024, 12, 30), new DateOnly(2025, 1, 26), true},
 		};
 
 		private static object[] GetGuardsCase =

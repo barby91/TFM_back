@@ -14,13 +14,15 @@ namespace OnGuardManager.WebAPI.Controllers
 	{
 		private readonly IAskedHolidayService _askedHolidayService;
 		private readonly IHolidayStatusService _holidayStatusHolidayService;
+		private readonly IPublicHolidayService _publicHolidayService;
 		private readonly IUserService _userService;
 
-		public AskedHolidayController(IAskedHolidayService askedHolidayService, IHolidayStatusService holidayStatusHolidayService, 
-									  IUserService userService)
+		public AskedHolidayController(IAskedHolidayService askedHolidayService, IHolidayStatusService holidayStatusHolidayService,
+									  IPublicHolidayService publicHolidayService, IUserService userService)
 		{
 			_askedHolidayService = askedHolidayService;
 			_holidayStatusHolidayService = holidayStatusHolidayService;
+			_publicHolidayService = publicHolidayService;
 			_userService = userService;
 		}
 
@@ -55,7 +57,7 @@ namespace OnGuardManager.WebAPI.Controllers
 
 					//Es necesario comprobar si hay un fin de semana por medio, en cuyo caso, se solicita automáticamente.
 					//Esta comprobación solo se hace si el periodo no es weekend
-					if (!askedHolidayModel.Period.Equals("Weekend"))
+					if (!askedHolidayModel.Period.Equals("Weekend") && await _holidayStatusHolidayService.GetIdHolidayStatusByDescription(askedHolidayModel.StatusDes) == (int)EnumHolidayStatus.Solicitado)
 					{
 						result = result && await CheckWeekend(askedHolidayModel);
 					}
@@ -101,12 +103,15 @@ namespace OnGuardManager.WebAPI.Controllers
 			bool findWeekEnd = false;
 			bool result = true;
 			AskedHolidayModel askedWeekend = new AskedHolidayModel();
+			List<PublicHolidayModel> publicHoliday = await _publicHolidayService.GetAllPublicHolidaysByCenter(askedHolidayModel.IdCenter);
+			List<DateOnly> datePublicHoliday = publicHoliday.Select(ph => ph.Date).ToList();
 
 			while (date < askedHolidayModel.DateTo && !findWeekEnd)
 			{
 				//solo busca por sábado porque busamos el primer día de fin de semana del periodo.
-				////Esto es sábado ya que el periodo será de días laborables
-				if (date.DayOfWeek == DayOfWeek.Saturday) 
+				//Esto es sábado ya que el periodo será de días laborables. Buscamos también si
+				//hay un día festivo
+				if (date.DayOfWeek == DayOfWeek.Saturday || datePublicHoliday.Contains(date))
 				{
 					findWeekEnd = true;
 					askedWeekend = new AskedHolidayModel()
@@ -124,12 +129,12 @@ namespace OnGuardManager.WebAPI.Controllers
 			if (findWeekEnd)
 			{
 				//ahora buscamos el último día de fin de semana del periodo.
-				//En este caso será domingo
+				//En este caso será domingo o el último día festivo
 				findWeekEnd = false;
 				date = askedHolidayModel.DateTo;
 				while (date >= askedHolidayModel.DateFrom && !findWeekEnd)
 				{
-					if (date.DayOfWeek == DayOfWeek.Sunday)
+					if (date.DayOfWeek == DayOfWeek.Sunday || datePublicHoliday.Contains(date))
 					{
 						findWeekEnd = true;
 						askedWeekend.DateTo = date;

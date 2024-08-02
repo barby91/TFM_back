@@ -79,7 +79,7 @@ namespace onGuardManager.Models.DTO.Models
 			{
 				this.unityName = user.IdUnityNavigation.Name;
 				//TODO solo para pruebas de asignación de guardias
-				//this.NameSurname += "_" + user.IdUnityNavigation.Name;
+				this.NameSurname += "_" + user.IdUnityNavigation.Name;
 				SetColor(user.IdUnityNavigation.Name);
 			}
 		}

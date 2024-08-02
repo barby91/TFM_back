@@ -17,6 +17,8 @@ public class AskedHolidayModel
 	public string StatusDes { get; set; } = string.Empty;
 
 	public int IdUser { get; set; }
+
+	public int IdCenter { get; set; }
 	#endregion
 
 	#region constructor
@@ -30,6 +32,7 @@ public class AskedHolidayModel
 		Period = askedHolidays.Period;
 		StatusDes = askedHolidays.IdStatusNavigation.Description;
 		IdUser = (int)askedHolidays.IdUser;
+		IdCenter = (int)askedHolidays.IdUserNavigation.IdCenter;
 	}
 	#endregion
 
