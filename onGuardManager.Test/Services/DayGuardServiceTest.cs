@@ -119,7 +119,7 @@ namespace onGuardManager.Test.Repository
 			_userRepository.Setup(u => u.GetAllUsersBySpecialty(2)).ReturnsAsync(fakeUsers.Where(u => u.IdSpecialty == 2).ToList());
 			_specialtyRepository.Setup(s => s.GetAllSpecialtiesWithoutCommonUnitiesByCenter(It.IsAny<int>())).ReturnsAsync(GetFakeSpecialties());
 			_specialtyRepository.Setup(s => s.GetSpecialtyById(It.IsAny<int>())).ReturnsAsync(GetFakeSpecialties()[0]);
-			_unityRepository.Setup(u => u.GetAllCommonUnities()).ReturnsAsync(GetFakeCommonUnities());
+			_unityRepository.Setup(u => u.GetAllCommonUnities(It.IsAny<int>())).ReturnsAsync(GetFakeCommonUnities());
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2023, It.IsAny<int>())).ReturnsAsync(new List<DayGuard>());
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2024, 0)).ReturnsAsync(GetFakeDayGuards());
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2024, 1)).ReturnsAsync(GetFakeDayGuards().Where(dg => dg.Day.Month == 1).ToList());

@@ -22,13 +22,13 @@ namespace onGuardManager.Data.Repository
         #endregion
 
         #region interface
-        public async Task<List<Unity>> GetAllCommonUnities()
+        public async Task<List<Unity>> GetAllCommonUnities(int idCenter)
 		{
 			List<Unity> unities = new List<Unity>();
 
 			try
 			{
-				unities = await _context.Unities.Where(u => u.IdSpecialty == null).ToListAsync();
+				unities = await _context.Unities.Where(u => u.IdSpecialty == null && u.IdCenter == idCenter).ToListAsync();
 				
 				LogClass.WriteLog(ErrorWrite.Info, "Se han buscado las unidades comunes en la base de datos");
 

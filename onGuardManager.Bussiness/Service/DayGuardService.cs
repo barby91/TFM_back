@@ -122,7 +122,7 @@ namespace onGuardManager.Bussiness.Service
 				}
 			}
 
-			unities.AddRange(await _unityRepository.GetAllCommonUnities());
+			unities.AddRange(await _unityRepository.GetAllCommonUnities(guardRequest.idCenter));
 
 			//recorremos cada usuario para inicializar sus estadísticas
 

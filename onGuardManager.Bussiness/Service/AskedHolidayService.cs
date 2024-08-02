@@ -154,6 +154,7 @@ namespace onGuardManager.Bussiness.Service
 
 			return daysDifference;
 		}
+
 		#endregion
 	}
 }

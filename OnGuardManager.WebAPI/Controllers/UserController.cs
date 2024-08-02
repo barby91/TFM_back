@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using onGuardManager.Bussiness.IService;
-using onGuardManager.Bussiness.Service;
-using onGuardManager.Logger;
 using onGuardManager.Models.DTO.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -20,8 +18,13 @@ namespace OnGuardManager.WebAPI.Controllers
 			_userService = userService;
 		}
 
+		/// <summary>
+		/// Obtiene todos los usuarios por centro
+		/// </summary>
+		/// <param name="idCenter"></param>
+		/// <returns></returns>
 		[HttpGet("{idCenter}")]
-		public async Task<IActionResult> GetAllUsersBycenter(int idCenter)
+		public async Task<IActionResult> GetAllUsersByCenter(int idCenter)
 		{
 			try
 			{
@@ -34,6 +37,12 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Obtiene un usuario por su identificador
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="idCenter"></param>
+		/// <returns></returns>
 		[HttpGet()]
 		public async Task<IActionResult> GetUserById(int id, int idCenter)
 		{
@@ -48,21 +57,17 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
-		// POST api/<LoginController>
+		/// <summary>
+		/// Guarda un usuario nuevo
+		/// </summary>
+		/// <param name="userModel">Datos del nuevo usuario</param>
+		/// <returns></returns>
 		[HttpPost]
-		public async Task<IActionResult> SaveUser([FromBody] RealUserModel userModel)
+		public async Task<IActionResult> SaveNewUser([FromBody] RealUserModel userModel)
 		{
 			try
 			{
-				bool result = true;
-				if (userModel.Id == 0)
-				{
-					result = await _userService.AddUser(userModel.Map());
-				}
-				else
-				{
-					result = await _userService.UpdateUser(userModel.Map());
-				}
+				bool result = await _userService.AddUser(userModel.Map());
 				return Ok(result);
 			}
 			catch (Exception ex)
@@ -71,6 +76,31 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Actualiza un usaurio existente
+		/// </summary>
+		/// <param name="userModel">Datos del usuario a actualizar</param>
+		/// <returns></returns>
+		[HttpPut]
+		public async Task<IActionResult> UpdateUser([FromBody] RealUserModel userModel)
+		{
+			try
+			{
+				bool result = await _userService.UpdateUser(userModel.Map());
+				return Ok(result);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
+		}
+
+		/// <summary>
+		/// Guarda una lista de usuario nuevos cuyos datos están en un fichero
+		/// </summary>
+		/// <param name="idCenter">Identificador del centro</param>
+		/// <param name="file">Fichero con los datos de los usuarios</param>
+		/// <returns></returns>
 		[HttpPost("{idCenter}")]
 		public async Task<IActionResult> SaveUsers(int idCenter, [FromForm] IFormFile file)
 		{
@@ -96,7 +126,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
-		// DELETE api/<LoginController>/5
+		/// <summary>
+		/// Borra un usuario existente
+		/// </summary>
+		/// <param name="id">Identificador del usuario a borrar</param>
+		/// <returns></returns>
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{

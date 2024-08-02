@@ -26,8 +26,13 @@ namespace OnGuardManager.WebAPI.Controllers
 			_userService = userService;
 		}
 
+		/// <summary>
+		/// Crea una nueva solicitud de vacaciones o fin de semana
+		/// </summary>
+		/// <param name="askedHolidayModel">Datos de los días solicitados</param>
+		/// <returns></returns>
 		[HttpPost]
-		public async Task<IActionResult> SaveHolidayAsked([FromBody] AskedHolidayModel askedHolidayModel)
+		public async Task<IActionResult> SaveNewHolidayAsked([FromBody] AskedHolidayModel askedHolidayModel)
 		{
 			try
 			{
@@ -37,14 +42,13 @@ namespace OnGuardManager.WebAPI.Controllers
 				//si ha pedido nuevas vacaciones, primero hay que comprobar que puede pedirlas, es decir, que le quedan días suficientes
 				if (_askedHolidayService.CheckPendingHolidaysUser(askedHolidayModel))
 				{
-					if (askedHolidayModel.Id == 0)
+					AskedHolidayModel? ahm = await _askedHolidayService.UpdateCancelAskedHoliday(askedHolidayModel);
+					if (ahm != null)
 					{
-						AskedHolidayModel? ahm = await _askedHolidayService.UpdateCancelAskedHoliday(askedHolidayModel);
-						if (ahm != null)
-						{
-							askedHolidayModel = ahm;
-						}
+						askedHolidayModel = ahm;
 					}
+
+					//puede ser necesario actualizar en lugar de crear un nuevo objeto si la solicitud está cancelada
 					if (askedHolidayModel.Id == 0)
 					{
 						result = await _askedHolidayService.AddAskedHoliday(askedHolidayModel.Map(), await _holidayStatusHolidayService.GetIdHolidayStatusByDescription(EnumHolidayStatus.Solicitado.ToString()));
@@ -83,12 +87,62 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Actualiza una petición de vacaciones
+		/// </summary>
+		/// <param name="askedHolidayModel"></param>
+		/// <returns></returns>
+		[HttpPut]
+		public async Task<IActionResult> UpdateHolidayAsked([FromBody] AskedHolidayModel askedHolidayModel)
+		{
+			try
+			{
+				bool result = true;
+				string message = "No se han podido solicitar los días, compruebe que no los tenga ya solicitados";
+
+				//si ha pedido nuevas vacaciones, primero hay que comprobar que puede pedirlas, es decir, que le quedan días suficientes
+				result = await _askedHolidayService.UpdateAskedHoliday(askedHolidayModel.Map(), 
+																		await _holidayStatusHolidayService.GetIdHolidayStatusByDescription(askedHolidayModel.StatusDes));
+					
+				//Es necesario comprobar si hay un fin de semana por medio, en cuyo caso, se solicita automáticamente.
+				//Esta comprobación solo se hace si el periodo no es weekend
+				if (!askedHolidayModel.Period.Equals("Weekend") &&
+					await _holidayStatusHolidayService.GetIdHolidayStatusByDescription(askedHolidayModel.StatusDes) == (int)EnumHolidayStatus.Solicitado)
+				{
+					result = result && await CheckWeekend(askedHolidayModel);
+				}
+
+				if (result)
+				{
+					return Ok(await _userService.GetUserModelById(askedHolidayModel.IdUser));
+				}
+				else
+				{
+					return BadRequest(JsonConvert.SerializeObject(message));
+				}
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(JsonConvert.SerializeObject(ex.Message));
+			}
+		}
+
+		/// <summary>
+		/// Obtiene los días solictidaos pendientes de aprobación de los usuarios de un determinado centro,
+		/// excepto los del usuario logado.
+		/// </summary>
+		/// <param name="idCenter">Identificador del centro</param>
+		/// <param name="idUser">Identificador del usuario</param>
+		/// <returns></returns>
 		[HttpGet("{idCenter}")]
 		public async Task<IActionResult> GetAllPendingAskedHolidays(int idCenter, int idUser)
 		{
 			try
 			{
-				List<PendingAskedHolidayModel> askedHolidaysModel = await _askedHolidayService.GetAllPendingAskedHolidaysByCenter(idCenter, idUser, EnumHolidayStatus.Solicitado.ToString());
+				List<PendingAskedHolidayModel> askedHolidaysModel = 
+					await _askedHolidayService.GetAllPendingAskedHolidaysByCenter(idCenter, 
+																				  idUser,
+																				  EnumHolidayStatus.Solicitado.ToString());
 				return Ok(askedHolidaysModel);
 			}
 			catch(Exception ex)
@@ -97,6 +151,13 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		#region private methods
+
+		/// <summary>
+		/// Este método comprueba si hay algún fin de semana o festivo entre los días solicitados
+		/// </summary>
+		/// <param name="askedHolidayModel">Días solicitados</param>
+		/// <returns></returns>
 		private async Task<bool> CheckWeekend (AskedHolidayModel askedHolidayModel)
 		{
 			DateOnly date = askedHolidayModel.DateFrom;
@@ -164,5 +225,7 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 			return await Task.FromResult(result);
 		}
+
+		#endregion
 	}
 }

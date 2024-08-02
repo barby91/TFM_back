@@ -67,6 +67,7 @@ namespace onGuardManager.Data.Repository
 										 .Include(u => u.IdCenterNavigation)
 										 .Include(u => u.IdRolNavigation)
 										 .Include(u => u.IdSpecialtyNavigation)
+										 .Include(u => u.IdUnityNavigation)
 										 .Include(u => u.AskedHolidays)
 										 .ThenInclude(ah => ah.IdStatusNavigation)
 										 .Where(u => u.IdCenter == idCenter).ToListAsync();
@@ -77,6 +78,7 @@ namespace onGuardManager.Data.Repository
 										 .Include(u => u.IdCenterNavigation)
 										 .Include(u => u.IdRolNavigation)
 										 .Include(u => u.IdSpecialtyNavigation)
+										 .Include(u => u.IdUnityNavigation)
 										 .Where(u => u.IdCenter == idCenter).ToListAsync();
 				}
 				

@@ -37,7 +37,7 @@ namespace onGuardManager.Test.Services
 			#endregion
 
 			#region Arrange
-			_unityRepository.Setup(ur => ur.GetAllCommonUnities()).ReturnsAsync(new List<Unity>()
+			_unityRepository.Setup(ur => ur.GetAllCommonUnities(It.IsAny<int>())).ReturnsAsync(new List<Unity>()
 																				{
 																					new Unity
 																					{
@@ -49,7 +49,7 @@ namespace onGuardManager.Test.Services
 			#endregion
 
 			#region Actual
-			List<UnityModel> actual = _serviceUnity.GetAllCommonUnities().Result;
+			List<UnityModel> actual = _serviceUnity.GetAllCommonUnities(It.IsAny<int>()).Result;
 			#endregion
 
 			#region Assert
@@ -68,10 +68,10 @@ namespace onGuardManager.Test.Services
 		public void UnityServiceTestGetAllCommonUnitiesException()
 		{
 			#region Arrange
-			_unityRepository.Setup(x => x.GetAllCommonUnities()).Callback(() => throw new Exception());
+			_unityRepository.Setup(x => x.GetAllCommonUnities(It.IsAny<int>())).Callback(() => throw new Exception());
 			#endregion
 
-			Assert.ThrowsAsync<Exception>(async() => await _serviceUnity.GetAllCommonUnities());
+			Assert.ThrowsAsync<Exception>(async() => await _serviceUnity.GetAllCommonUnities(It.IsAny<int>()));
 		}
 		
 		[TestCaseSource(nameof(GetUnityByIdCase))]

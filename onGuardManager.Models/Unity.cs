@@ -8,11 +8,13 @@ public partial class Unity
 
     public string Description { get; set; } = null!;
 
+    public decimal MaxByDay { get; set; }
+
+    public decimal MaxByDayWeekend { get; set; }
+
     public decimal? IdSpecialty { get; set; }
 
-    public decimal? MaxByDay { get; set; }
-
-    public decimal? MaxByDayWeekend { get; set; }
+    public decimal? IdCenter { get; set; }
 
     public virtual Specialty? IdSpecialtyNavigation { get; set; }
 

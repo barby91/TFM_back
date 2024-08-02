@@ -19,12 +19,17 @@ namespace OnGuardManager.WebAPI.Controllers
 			_unityService = unityService;
 		}
 
+		/// <summary>
+		/// Obtiene todas las unidades comunes de un determinado centro
+		/// </summary>
+		/// <param name="idCenter"></param>
+		/// <returns></returns>
 		[HttpGet()]
-		public async Task<IActionResult> GetAllCommonUnity()
+		public async Task<IActionResult> GetAllCommonUnity(int idCenter)
 		{
 			try
 			{
-				List<UnityModel> unitiesModel = await _unityService.GetAllCommonUnities();
+				List<UnityModel> unitiesModel = await _unityService.GetAllCommonUnities(idCenter);
 				return Ok(unitiesModel);
 			}
 			catch (Exception ex)
@@ -33,6 +38,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Obtiene una unidad por su identificador
+		/// </summary>
+		/// <param name="idUnity">Identificador de la unidad</param>
+		/// <returns></returns>
 		[HttpGet("{idUnity}")]
 		public async Task<IActionResult> GetUnityById(int idUnity)
 		{
@@ -47,21 +57,17 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
-		// POST api/<LoginController>
+		/// <summary>
+		/// Guarda una unidad nueva
+		/// </summary>
+		/// <param name="unityModel">Objeto unidad nueva</param>
+		/// <returns></returns>
 		[HttpPost]
-		public async Task<IActionResult> SaveUnity([FromBody] UnityModel unityModel)
+		public async Task<IActionResult> SaveNewUnity([FromBody] UnityModel unityModel)
 		{
 			try
 			{
-				bool result = true;
-				if (unityModel.Id == 0)
-				{
-					result = await _unityService.AddUnity(unityModel.Map());
-				}
-				else
-				{
-					result = await _unityService.UpdateUnity(unityModel.Map());
-				}
+				bool result = await _unityService.AddUnity(unityModel.Map());
 				return Ok(result);
 			}
 			catch (Exception ex)
@@ -70,8 +76,34 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Actualiza una unidad existente
+		/// </summary>
+		/// <param name="unityModel">Datos de la unidad a actualizar</param>
+		/// <returns></returns>
+		[HttpPut]
+		public async Task<IActionResult> UpdateUnity([FromBody] UnityModel unityModel)
+		{
+			try
+			{
+				bool result =  await _unityService.UpdateUnity(unityModel.Map());
+				return Ok(result);
+				return Ok(result);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
+		}
+
+		/// <summary>
+		/// Guarda una lista de unidades desde un fichero
+		/// </summary>
+		/// <param name="idCenter">identificador del centro</param>
+		/// <param name="file">fichero donde están los datos</param>
+		/// <returns></returns>
 		[HttpPost("{idCenter}")]
-		public async Task<IActionResult> SaveUsers(int idCenter, [FromForm] IFormFile file)
+		public async Task<IActionResult> SaveUnitiess(int idCenter, [FromForm] IFormFile file)
 		{
 			try
 			{
@@ -85,7 +117,7 @@ namespace OnGuardManager.WebAPI.Controllers
 					}
 					else
 					{
-						return BadRequest("Se ha producido un error al guardar los usuarios.");
+						return BadRequest("Se ha producido un error al guardar las unidades.");
 					}
 				}
 			}
@@ -95,9 +127,13 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
-		// DELETE api/<LoginController>/5
+		/// <summary>
+		/// Borra una unidad por su id
+		/// </summary>
+		/// <param name="id">Identificador de la unidad a borrar</param>
+		/// <returns></returns>
 		[HttpDelete("{id}")]
-		public async Task<IActionResult> Delete(int id)
+		public async Task<IActionResult> DeleteUnity(int id)
 		{
 			try
 			{

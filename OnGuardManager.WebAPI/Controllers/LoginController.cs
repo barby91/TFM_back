@@ -18,7 +18,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			_userService = userService;
 		}
 
-		// GET: api/<LoginController>
+		/// <summary>
+		/// Comprueba si los datos de login corresponden a un usuario existente
+		/// </summary>
+		/// <param name="user">Datos del login</param>
+		/// <returns></returns>
 		[HttpGet]
 		public async Task<IActionResult> GetUser([FromQuery] UserLogginRequest user)
 		{

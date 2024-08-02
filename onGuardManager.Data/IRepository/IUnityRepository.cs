@@ -2,7 +2,7 @@
 {
     public interface IUnityRepository<TUnity> where TUnity : class
     {
-        Task<List<TUnity>> GetAllCommonUnities();
+        Task<List<TUnity>> GetAllCommonUnities(int idCenter);
 
         Task<TUnity?> GetUnityById(int id);
 

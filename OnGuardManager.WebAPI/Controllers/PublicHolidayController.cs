@@ -18,6 +18,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			_publicHolidayService = publicHolidayService;
 		}
 
+		/// <summary>
+		/// Obtiene los días festivos de un determinado centro
+		/// </summary>
+		/// <param name="idCenter">Identificador del centro</param>
+		/// <returns></returns>
 		[HttpGet("{idCenter}")]
 		public async Task<IActionResult> GetAllPublicHolidays(int idCenter)
 		{

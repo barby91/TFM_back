@@ -19,6 +19,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			_specialtyService = specialtyService;
 		}
 
+		/// <summary>
+		/// Obtiene todas las especialidades de un dentro
+		/// </summary>
+		/// <param name="idCenter">Identificador del centro</param>
+		/// <returns></returns>
 		[HttpGet("{idCenter}")]
 		public async Task<IActionResult> GetAllSpecialtiesBycenter(int idCenter)
 		{
@@ -33,6 +38,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Obtiene una especialidad por su id
+		/// </summary>
+		/// <param name="id">Identificador de la especialidad que se busca</param>
+		/// <returns></returns>
 		[HttpGet()]
 		public async Task<IActionResult> GetSpecialtyById(int id)
 		{
@@ -47,21 +57,17 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
-		// POST api/<LoginController>
+		/// <summary>
+		/// Guarda una nueva especialidad
+		/// </summary>
+		/// <param name="specialtyModel">Datos de la nueva especialidad</param>
+		/// <returns></returns>
 		[HttpPost]
-		public async Task<IActionResult> SaveSpecialty([FromBody] SpecialtyModel specialtyModel)
+		public async Task<IActionResult> SaveNewSpecialty([FromBody] SpecialtyModel specialtyModel)
 		{
 			try
 			{
-				bool result = true;
-				if (specialtyModel.Id == 0)
-				{
-					result = await _specialtyService.AddSpecialty(specialtyModel.Map());
-				}
-				else
-				{
-					result = await _specialtyService.UpdateSpecialty(specialtyModel.Map());
-				}
+				bool result = await _specialtyService.AddSpecialty(specialtyModel.Map());
 				return Ok(result);
 			}
 			catch (Exception ex)
@@ -70,6 +76,31 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Actualiza una especialidad existente
+		/// </summary>
+		/// <param name="specialtyModel">Datos de la especialidad a actualizar</param>
+		/// <returns></returns>
+		[HttpPut]
+		public async Task<IActionResult> UpdateSpecialty([FromBody] SpecialtyModel specialtyModel)
+		{
+			try
+			{
+				bool result = await _specialtyService.UpdateSpecialty(specialtyModel.Map());
+				return Ok(result);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(JsonConvert.SerializeObject(ex.Message));
+			}
+		}
+
+		/// <summary>
+		/// Guarda una lista de especialidades dadas por fichero
+		/// </summary>
+		/// <param name="idCenter">Identificador del centro</param>
+		/// <param name="file">Fichero con los datos</param>
+		/// <returns></returns>
 		[HttpPost("{idCenter}")]
 		public async Task<IActionResult> SaveSpecialties(int idCenter, [FromForm] IFormFile file)
 		{
@@ -105,7 +136,7 @@ namespace OnGuardManager.WebAPI.Controllers
 					}
 					else
 					{
-						return BadRequest("Se ha producido un error al guardar los usuarios.");
+						return BadRequest("Se ha producido un error al guardar las especialidades.");
 					}
 				}
 			}
@@ -115,8 +146,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
-
-		// DELETE api/<LoginController>/5
+		/// <summary>
+		/// Borra una especialidad existente
+		/// </summary>
+		/// <param name="id">Identificador de la especialidad a borrar</param>
+		/// <returns></returns>
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{

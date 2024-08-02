@@ -18,6 +18,10 @@ namespace OnGuardManager.WebAPI.Controllers
 			_levelService = levelService;
 		}
 
+		/// <summary>
+		/// Obtiene todos los niveles de residentes
+		/// </summary>
+		/// <returns></returns>
 		[HttpGet()]
 		public async Task<IActionResult> GetAllLevels()
 		{

@@ -19,6 +19,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			_dayGuardService = dayGuardService;
 		}
 
+		/// <summary>
+		/// Calcula una asignación de guardias
+		/// </summary>
+		/// <param name="guardRequest">Datos para calcular la asignación</param>
+		/// <returns></returns>
 		[HttpPost()]
 		public async Task<IActionResult> CalculateGuards([FromBody] GuardRequest guardRequest)
 		{
@@ -42,6 +47,11 @@ namespace OnGuardManager.WebAPI.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Obtiene la asignación de guardias de un determinado centro
+		/// </summary>
+		/// <param name="idCenter">Identificador del centro</param>
+		/// <returns></returns>
 		[HttpGet()]
 		public async Task<IActionResult> GetGuards(int idCenter)
 		{

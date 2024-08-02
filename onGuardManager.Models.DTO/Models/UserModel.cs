@@ -65,7 +65,7 @@ namespace onGuardManager.Models.DTO.Models
 			{
 				this.levelName = user.IdLevelNavigation.Name;
 				//TODO solo para pruebas de asignación de guardias
-				this.NameSurname = user.Name + "_" + user.IdLevelNavigation.Name;
+				//this.NameSurname = user.Name + "_" + user.IdLevelNavigation.Name;
 			}
 			if (user.IdRolNavigation != null)
 			{
@@ -79,8 +79,8 @@ namespace onGuardManager.Models.DTO.Models
 			{
 				this.unityName = user.IdUnityNavigation.Name;
 				//TODO solo para pruebas de asignación de guardias
-				this.NameSurname += "_" + user.IdUnityNavigation.Name;
-				SetColor(user.IdUnityNavigation.Name);
+				//this.NameSurname += "_" + user.IdUnityNavigation.Name;
+				//SetColor(user.IdUnityNavigation.Name);
 			}
 		}
 

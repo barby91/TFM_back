@@ -22,33 +22,22 @@ namespace onGuardManager.Test.Repository
 			_unityRepository = new UnityRepository(dbContext.Object);
 		}
 
+		[TestCaseSource(nameof(GetCommonUnityCase))]
 		[Test]
-		public void UnityRepositoryTestGetAllCommonUnities()
+		public void UnityRepositoryTestGetAllCommonUnities(int idCenter, List<Unity> expected)
 		{
 			#region arrange
 			dbContext.Setup<DbSet<Unity>>(x => x.Unities)
 				.ReturnsDbSet(GetFakeUnities());
 			#endregion
 
-			#region expected
-			List<Unity> expected = new List<Unity>()
-			{
-				new Unity()
-				{
-					Id = 9,
-					Description = "rotatorio",
-					Name = "rotatorio"
-				}
-			};
-			#endregion
-
 			#region Actual
-			List<Unity> actual = _unityRepository.GetAllCommonUnities().Result;
+			List<Unity> actual = _unityRepository.GetAllCommonUnities(idCenter).Result;
 			#endregion
 
 			#region Assert
 			Assert.IsNotNull(actual);
-			Assert.AreEqual(expected.Count, actual.Count);
+			Assert.That(actual.Count, Is.EqualTo(expected.Count));
 			for (int i = 0; i < actual.Count; i++)
 			{
 				CollectionAssert.AreEqual(expected[i].Users, actual[i].Users);
@@ -68,7 +57,7 @@ namespace onGuardManager.Test.Repository
 			dbContext.Setup(x => x.Unities).Callback(() => throw new Exception());
 			#endregion
 
-			Assert.ThrowsAsync<Exception>(async() => await _unityRepository.GetAllCommonUnities());
+			Assert.ThrowsAsync<Exception>(async() => await _unityRepository.GetAllCommonUnities(It.IsAny<int>()));
 		}
 
 		[Test]
@@ -300,6 +289,22 @@ namespace onGuardManager.Test.Repository
 
 		private static object[] GetDeleteUnityCase =
 		{
+			new object[] { 1,
+						   new List<Unity>()
+							{
+								new Unity()
+								{
+									Id = 9,
+									Description = "rotatorio",
+									Name = "rotatorio"
+								}
+							}
+			},
+			new object[] { 2, new List<Unity>() }
+		};
+
+		private static object[] GetCommonUnityCase =
+		{
 			new object[] { 1, true, 0, 1},
 			new object[] { 10, false, 0, 0 }
 		};
@@ -433,7 +438,8 @@ namespace onGuardManager.Test.Repository
 				{
 					Id = 9,
 					Description = "rotatorio",
-					Name = "rotatorio"
+					Name = "rotatorio",
+					IdCenter = 1
 				}
 			};
 		}

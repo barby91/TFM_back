@@ -18,6 +18,10 @@ namespace OnGuardManager.WebAPI.Controllers
 			_rolService = rolService;
 		}
 
+		/// <summary>
+		/// Obtiene todos los roles de la aplicación
+		/// </summary>
+		/// <returns></returns>
 		[HttpGet()]
 		public async Task<IActionResult> GetAllRols()
 		{

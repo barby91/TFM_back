@@ -25,11 +25,11 @@ namespace onGuardManager.Bussiness.Service
 
 		#region interface
 
-		public async Task<List<UnityModel>> GetAllCommonUnities()
+		public async Task<List<UnityModel>> GetAllCommonUnities(int idCenter)
 		{
 			try
 			{
-				List<Unity> unities = await _unityRepository.GetAllCommonUnities();
+				List<Unity> unities = await _unityRepository.GetAllCommonUnities(idCenter);
 				List<UnityModel> unitiesModel = new List<UnityModel>();
 				foreach (Unity unity in unities)
 				{

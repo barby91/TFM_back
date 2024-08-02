@@ -32,7 +32,7 @@ public partial class OnGuardManagerContext : DbContext
 
     public virtual DbSet<Rol> Rols { get; set; }
 
-    //  public virtual DbSet<Rule> Rules { get; set; }
+    //public virtual DbSet<Rule> Rules { get; set; }
 
     public virtual DbSet<Specialty> Specialties { get; set; }
 
@@ -85,8 +85,8 @@ public partial class OnGuardManagerContext : DbContext
                 .ValueGeneratedOnAdd()
                 .HasColumnType("numeric(18, 0)");
 
-			entity.HasMany(d => d.assignedUsers).WithMany(p => p.dayGuardsAssigned)
-			   .UsingEntity<Dictionary<string, object>>(
+            entity.HasMany(d => d.assignedUsers).WithMany(p => p.dayGuardsAssigned)
+                .UsingEntity<Dictionary<string, object>>(
                     "DayGuardUser",
                     r => r.HasOne<User>().WithMany()
                         .HasForeignKey("IdUser")
@@ -242,6 +242,7 @@ public partial class OnGuardManagerContext : DbContext
                 .ValueGeneratedOnAdd()
                 .HasColumnType("numeric(18, 0)");
             entity.Property(e => e.Description).HasMaxLength(150);
+            entity.Property(e => e.IdCenter).HasColumnType("numeric(18, 0)");
             entity.Property(e => e.IdSpecialty).HasColumnType("numeric(18, 0)");
             entity.Property(e => e.MaxByDay).HasColumnType("numeric(18, 0)");
             entity.Property(e => e.MaxByDayWeekend).HasColumnType("numeric(18, 0)");
