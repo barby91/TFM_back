@@ -8,5 +8,7 @@ public class GuardRequest
     public int groupOfWeeks { get; set; }
 
     public int idSpecialty { get; set; }
+
+	public int year { get; set; }
 	#endregion
 }

@@ -174,13 +174,6 @@ namespace onGuardManager.Test.Services
 		public void UnityServiceTestAddUnityException()
 		{
 			#region Arrange
-			Unity unity = new Unity()
-			{
-				IdSpecialty = 1,
-				Name = "unidad9",
-				Description = "unidad9"
-			};
-
 			_unityRepository.Setup(ur => ur.AddUnity(It.IsAny<Unity>())).Throws(() => new Exception());
 			#endregion
 
@@ -232,7 +225,9 @@ namespace onGuardManager.Test.Services
 				Id = 10,
 				IdSpecialty = 1,
 				Name = "unity10",
-				Description = "unity10"
+				Description = "unity10",
+				MaxByDay = 2,
+				MaxByDayWeekend = 3
 			};
 
 			_unityRepository.Setup(x => x.UpdateUnity(It.IsAny<Unity>())).Throws(() => new Exception());

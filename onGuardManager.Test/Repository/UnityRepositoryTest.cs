@@ -46,6 +46,8 @@ namespace onGuardManager.Test.Repository
 				Assert.That(actual[i].Description, Is.EqualTo(expected[i].Description));
 				Assert.That(actual[i].IdSpecialty, Is.EqualTo(expected[i].IdSpecialty));
 				Assert.That(actual[i].IdSpecialtyNavigation, Is.EqualTo(expected[i].IdSpecialtyNavigation));
+				Assert.That(actual[i].MaxByDay, Is.EqualTo(expected[i].MaxByDay));
+				Assert.That(actual[i].MaxByDayWeekend, Is.EqualTo(expected[i].MaxByDayWeekend));
 			}
 			#endregion
 		}
@@ -69,7 +71,9 @@ namespace onGuardManager.Test.Repository
 				Id = 1,
 				IdSpecialty = 1,
 				Name = "unidad1",
-				Description = "unidad1"
+				Description = "unidad1",
+				MaxByDay = 2,
+				MaxByDayWeekend = 3
 			};
 			#endregion
 
@@ -85,6 +89,8 @@ namespace onGuardManager.Test.Repository
 			Assert.That(actual.Description, Is.EqualTo(expected.Description));
 			Assert.That(actual.IdSpecialty, Is.EqualTo(expected.IdSpecialty));
 			Assert.That(actual.IdSpecialtyNavigation, Is.EqualTo(expected.IdSpecialtyNavigation));
+			Assert.That(actual.MaxByDay, Is.EqualTo(expected.MaxByDay));
+			Assert.That(actual.MaxByDayWeekend, Is.EqualTo(expected.MaxByDayWeekend));
 			#endregion
 		}
 
@@ -107,7 +113,9 @@ namespace onGuardManager.Test.Repository
 				Id = 1,
 				IdSpecialty = 1,
 				Name = "unidad1",
-				Description = "unidad1"
+				Description = "unidad1",
+				MaxByDay = 2,
+				MaxByDayWeekend = 3
 			};
 			#endregion
 
@@ -122,6 +130,8 @@ namespace onGuardManager.Test.Repository
 			Assert.That(actual.Name, Is.EqualTo(expected.Name));
 			Assert.That(actual.Description, Is.EqualTo(expected.Description));
 			Assert.That(actual.IdSpecialtyNavigation, Is.EqualTo(expected.IdSpecialtyNavigation));
+			Assert.That(actual.MaxByDay, Is.EqualTo(expected.MaxByDay));
+			Assert.That(actual.MaxByDayWeekend, Is.EqualTo(expected.MaxByDayWeekend));
 			#endregion
 		}
 
@@ -238,7 +248,9 @@ namespace onGuardManager.Test.Repository
 				Id = 1,
 				IdSpecialty = 1,
 				Name = "unidad5",
-				Description = "unidad5"
+				Description = "unidad5",
+				MaxByDay = 2,
+				MaxByDayWeekend = 3
 			};
 
 			dbContext.Setup(x => x.SaveChangesAsync(default)).Callback(() => throw new Exception());
@@ -287,7 +299,7 @@ namespace onGuardManager.Test.Repository
 			Assert.ThrowsAsync<Exception>(async() => await _unityRepository.DeleteUnity(1));
 		}
 
-		private static object[] GetDeleteUnityCase =
+		private static object[] GetCommonUnityCase =
 		{
 			new object[] { 1,
 						   new List<Unity>()
@@ -296,14 +308,16 @@ namespace onGuardManager.Test.Repository
 								{
 									Id = 9,
 									Description = "rotatorio",
-									Name = "rotatorio"
+									Name = "rotatorio",
+									MaxByDay= 2,
+									MaxByDayWeekend=3
 								}
 							}
 			},
 			new object[] { 2, new List<Unity>() }
 		};
 
-		private static object[] GetCommonUnityCase =
+		private static object[] GetDeleteUnityCase =
 		{
 			new object[] { 1, true, 0, 1},
 			new object[] { 10, false, 0, 0 }
@@ -315,11 +329,15 @@ namespace onGuardManager.Test.Repository
 					IdSpecialty = 1,
 					Name = "unidad9",
 					Description = "unidad9",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 			}, true, 0, 1},
 			new object[] { new Unity() {
 					IdSpecialty = 1,
 					Name = "unidad1",
-					Description = "unidad1"
+					Description = "unidad1",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 			}, false, 0, 0 }
 		};
 
@@ -330,18 +348,24 @@ namespace onGuardManager.Test.Repository
 					IdSpecialty = 1,
 					Name = "unidad9",
 					Description = "unidad9",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity() {
 					IdSpecialty = 1,
 					Name = "unidad10",
 					Description = "unidad10",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				}
 			}, true, 1, 1},
 			new object[] { new List<Unity>() {
 				new Unity() {
 					IdSpecialty = 1,
 					Name = "unidad1",
-					Description = "unidad1"
+					Description = "unidad1",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				} 
 			}, false, 0, 0 },
 			new object[] { new List<Unity>() {
@@ -354,6 +378,8 @@ namespace onGuardManager.Test.Repository
 					IdSpecialty = 1,
 					Name = "unidad1",
 					Description = "unidad1",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				}
 			}, true, 1, 1}
 		};
@@ -364,13 +390,17 @@ namespace onGuardManager.Test.Repository
 					Id = 1,
 					IdSpecialty = 1,
 					Name = "unidad1",
-					Description = "unidad1"
+					Description = "unidad1",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 			}, true, 0},
 			new object[] { new Unity() {
 					Id = 15,
 					IdSpecialty = 1,
 					Name = "unidad15",
-					Description = "unidad15"
+					Description = "unidad15",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 			}, false, 0}
 		};
 
@@ -383,63 +413,81 @@ namespace onGuardManager.Test.Repository
 					Id = 1,
 					Description = "unidad1",
 					Name = "unidad1",
-					IdSpecialty = 1
+					IdSpecialty = 1,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 2,
 					Description = "unidad2",
 					Name = "unidad2",
-					IdSpecialty = 1
+					IdSpecialty = 1,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 3,
 					Description = "unidad3",
 					Name = "unidad3",
-					IdSpecialty = 2
+					IdSpecialty = 2,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 4,
 					Description = "unidad4",
 					Name = "unidad4",
-					IdSpecialty = 2
+					IdSpecialty = 2,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 5,
 					Description = "unidad5",
 					Name = "unidad5",
-					IdSpecialty = 3
+					IdSpecialty = 3,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 6,
 					Description = "unidad6",
 					Name = "unidad6",
-					IdSpecialty = 3
+					IdSpecialty = 3,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				}, 
 				new Unity()
 				{
 					Id = 7,
 					Description = "unidad7",
 					Name = "unidad7",
-					IdSpecialty = 4
+					IdSpecialty = 4,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 8,
 					Description = "unidad8",
 					Name = "unidad8",
-					IdSpecialty = 4
+					IdSpecialty = 4,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 9,
 					Description = "rotatorio",
 					Name = "rotatorio",
-					IdCenter = 1
+					IdCenter = 1,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				}
 			};
 		}

@@ -87,7 +87,8 @@ namespace onGuardManager.Models.DTO.Models
 		#endregion
 
 		#region private methods
-		private void SetColor(string unityName)
+		//TODO solo para pruebas de asignación de guardias
+		/*private void SetColor(string unityName)
 		{
 			List<ColorUser> colors = new List<ColorUser>();
 			colors.Add(new ColorUser()
@@ -123,6 +124,7 @@ namespace onGuardManager.Models.DTO.Models
 			ColorUser? color = colors.Find(c => c.name == unityName);
 			this.Color = color != null ? color.color : "";
 		}
+		*/
 
 		/// <summary>
 		/// Este método calcula los días restante del periodo correspondiente al año pasado por parámetro

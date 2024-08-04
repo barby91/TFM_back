@@ -367,6 +367,10 @@ namespace onGuardManager.Test.Services
 																	IdStatusNavigation =  new HolidayStatus()
 																	{
 																		Description = "Solicitada"
+																	},
+																	IdUserNavigation = new User()
+																	{
+																		IdCenter = 1
 																	}
 																}
 															}
@@ -376,7 +380,7 @@ namespace onGuardManager.Test.Services
 			#endregion
 
 			#region Actual
-			UserModel? actual = _serviceUser.GetUserModelById(1).Result;
+			UserModel? actual = _serviceUser.GetUserModelById(It.IsAny<int>()).Result;
 			#endregion
 
 			#region Assert

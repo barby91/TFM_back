@@ -8210,3 +8210,140 @@
 2024-08-03 12:31:16.8161 Info FileTarget(Name=debugfile): Deleting old archive file: 'J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Release\net8.0\logs\archives\log_dev.2024-08-03 12_31_16.7817.log'.
 2024-08-03 12:31:17.0379 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Release\net8.0\logs\archives\log.2024-08-03 12_31_17.0379.log` (Fallback to dynamic wildcard)
 2024-08-03 12:31:17.0379 Info FileTarget(Name=logfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Release\net8.0\logs\log.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Release\net8.0\logs\archives\log.2024-08-03 12_31_17.0379.log
+2024-08-03 12:53:15.8153 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-03 12:53:15.9356 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-03 12:53:15.9356 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-03 12:53:15.9660 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-03 12:53:15.9827 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-03 12:53:15.9997 Info Configuration initialized.
+2024-08-03 12:53:16.1756 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Release\net8.0\logs\archives\log_dev.2024-08-03 12_53_16.1644.log` (Fallback to dynamic wildcard)
+2024-08-03 12:53:16.3646 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Release\net8.0\logs\archives\log.2024-08-03 12_53_16.3646.log` (Fallback to dynamic wildcard)
+2024-08-03 12:53:16.3646 Info FileTarget(Name=logfile): Deleting old archive file: 'J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Release\net8.0\logs\archives\log.2024-08-03 12_31_17.0379.log'.
+2024-08-03 13:26:53.3650 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-03 13:26:53.4203 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-03 13:26:53.4356 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-03 13:26:53.4356 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-03 13:26:53.4587 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-03 13:26:53.4691 Info Configuration initialized.
+2024-08-03 13:26:54.6418 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-03 13_26_54.6257.log` (Fallback to dynamic wildcard)
+2024-08-03 13:26:55.1485 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-03 13_26_55.1485.log` (Fallback to dynamic wildcard)
+2024-08-03 16:27:01.3478 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-03 16:27:01.4384 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-03 16:27:01.4384 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-03 16:27:01.4576 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-03 16:27:01.4709 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-03 16:27:01.4825 Info Configuration initialized.
+2024-08-03 16:27:01.8895 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-03 16_27_01.8774.log` (Fallback to dynamic wildcard)
+2024-08-03 16:27:02.2253 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-03 16_27_02.2253.log` (Fallback to dynamic wildcard)
+2024-08-04 10:37:15.3592 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 10:37:15.4893 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 10:37:15.4893 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 10:37:15.5143 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 10:37:15.5312 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 10:37:15.5489 Info Configuration initialized.
+2024-08-04 10:37:15.8594 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 10_37_15.8407.log` (Fallback to dynamic wildcard)
+2024-08-04 10:37:15.9147 Info FileTarget(Name=debugfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\log_dev.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 10_37_15.8407.log
+2024-08-04 10:37:16.1998 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 10_37_16.1998.log` (Fallback to dynamic wildcard)
+2024-08-04 10:37:16.2019 Info FileTarget(Name=logfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\log.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 10_37_16.1998.log
+2024-08-04 11:16:30.6903 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 11:16:30.7933 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 11:16:30.7933 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 11:16:30.8235 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 11:16:30.8336 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 11:16:30.8498 Info Configuration initialized.
+2024-08-04 11:16:31.0686 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 11_16_31.0516.log` (Fallback to dynamic wildcard)
+2024-08-04 11:16:31.3562 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 11_16_31.3562.log` (Fallback to dynamic wildcard)
+2024-08-04 11:45:41.7442 Info FileTarget(Name=debugfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\log_dev.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 11_45_41.7442.log
+2024-08-04 11:54:56.9323 Info FileTarget(Name=debugfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\log_dev.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 11_54_56.9323.log
+2024-08-04 12:09:51.1037 Info FileTarget(Name=debugfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\log_dev.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 12_09_51.1037.log
+2024-08-04 14:26:18.8950 Info FileTarget(Name=debugfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\log_dev.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 14_26_18.7326.log
+2024-08-04 15:34:18.8711 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 15:34:19.0265 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 15:34:19.0265 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 15:34:19.0551 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 15:34:19.0787 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 15:34:19.1004 Info Configuration initialized.
+2024-08-04 15:34:19.3866 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 15_34_19.3753.log` (Fallback to dynamic wildcard)
+2024-08-04 15:34:19.6421 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 15_34_19.6421.log` (Fallback to dynamic wildcard)
+2024-08-04 16:18:10.9862 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 16:18:11.0860 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 16:18:11.0889 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 16:18:11.1177 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 16:18:11.1358 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 16:18:11.1744 Info Configuration initialized.
+2024-08-04 16:18:11.6087 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 16_18_11.5899.log` (Fallback to dynamic wildcard)
+2024-08-04 16:18:11.8582 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 16_18_11.8582.log` (Fallback to dynamic wildcard)
+2024-08-04 16:21:51.5891 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 16:21:51.6887 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 16:21:51.6887 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 16:21:51.7220 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 16:21:51.7438 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 16:21:51.7705 Info Configuration initialized.
+2024-08-04 16:21:52.0051 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 16_21_51.9874.log` (Fallback to dynamic wildcard)
+2024-08-04 16:21:52.3092 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 16_21_52.3092.log` (Fallback to dynamic wildcard)
+2024-08-04 16:24:54.7207 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 16:24:54.9648 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 16:24:54.9648 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 16:24:55.0116 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 16:24:55.0281 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 16:24:55.0493 Info Configuration initialized.
+2024-08-04 16:24:55.4111 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 16_24_55.3911.log` (Fallback to dynamic wildcard)
+2024-08-04 16:24:55.6725 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 16_24_55.6725.log` (Fallback to dynamic wildcard)
+2024-08-04 20:16:42.3765 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 20:16:42.5010 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 20:16:42.5036 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 20:16:42.5516 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 20:16:42.5718 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 20:16:42.5901 Info Configuration initialized.
+2024-08-04 20:16:42.8611 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 20_16_42.8453.log` (Fallback to dynamic wildcard)
+2024-08-04 20:16:43.0828 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 20_16_43.0828.log` (Fallback to dynamic wildcard)
+2024-08-04 20:18:30.0890 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 20:18:30.1804 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 20:18:30.1804 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 20:18:30.2224 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 20:18:30.2492 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 20:18:30.2858 Info Configuration initialized.
+2024-08-04 20:18:30.4935 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 20_18_30.4769.log` (Fallback to dynamic wildcard)
+2024-08-04 20:18:30.6853 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 20_18_30.6853.log` (Fallback to dynamic wildcard)
+2024-08-04 20:21:18.4772 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 20:21:18.5684 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 20:21:18.5684 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 20:21:18.7443 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 20:21:18.7641 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 20:21:18.7861 Info Configuration initialized.
+2024-08-04 20:21:18.9267 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 20_21_18.9267.log` (Fallback to dynamic wildcard)
+2024-08-04 20:21:19.2357 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 20_21_19.2357.log` (Fallback to dynamic wildcard)
+2024-08-04 20:53:59.5422 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 20:53:59.6593 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 20:53:59.6593 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 20:53:59.6862 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 20:53:59.7143 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 20:53:59.7831 Info Configuration initialized.
+2024-08-04 20:54:00.0863 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 20_54_00.0706.log` (Fallback to dynamic wildcard)
+2024-08-04 20:54:00.4116 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 20_54_00.4116.log` (Fallback to dynamic wildcard)
+2024-08-04 20:56:54.3466 Info FileTarget(Name=debugfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\log_dev.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 20_56_54.3466.log
+2024-08-04 21:09:59.0242 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 21:09:59.1165 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 21:09:59.1165 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 21:09:59.1854 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 21:09:59.2030 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 21:09:59.2229 Info Configuration initialized.
+2024-08-04 21:09:59.4873 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 21_09_59.4645.log` (Fallback to dynamic wildcard)
+2024-08-04 21:09:59.7548 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 21_09_59.7548.log` (Fallback to dynamic wildcard)
+2024-08-04 21:11:11.1408 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 21:11:11.4205 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 21:11:11.4205 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 21:11:11.5388 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 21:11:11.5596 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 21:11:11.6047 Info Configuration initialized.
+2024-08-04 21:11:12.0372 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 21_11_12.0189.log` (Fallback to dynamic wildcard)
+2024-08-04 21:11:12.2946 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 21_11_12.2946.log` (Fallback to dynamic wildcard)
+2024-08-04 21:13:09.9421 Info FileTarget(Name=debugfile): Archiving J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\log_dev.log to J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 21_13_09.9421.log
+2024-08-04 23:19:59.6644 Warn Error has been raised. Exception: NLog.NLogConfigurationException: Unrecognized value 'assebly'='NLog.Web.AspNetCore' for element 'add' in section 'extensions'
+2024-08-04 23:19:59.7428 Info Registered target NLog.Targets.FileTarget(Name=logfile)
+2024-08-04 23:19:59.7428 Info Registered target NLog.Targets.FileTarget(Name=debugfile)
+2024-08-04 23:19:59.7640 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.2.8.2366. Product version: 5.2.8+f586f1341c46fa38aaaff4c641e7f0fa7e813943. GlobalAssemblyCache: False
+2024-08-04 23:19:59.7748 Info Validating config: TargetNames=logfile, debugfile, ConfigItems=32, FilePath=J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\NLog.config
+2024-08-04 23:19:59.7871 Info Configuration initialized.
+2024-08-04 23:20:00.0615 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log_dev.2024-08-04 23_20_00.0434.log` (Fallback to dynamic wildcard)
+2024-08-04 23:20:00.2728 Info FileTarget: Pattern {#} is missing in ArchiveFileName `J:\Documentos\Universidad\MasterII\Curso_23-24\2º\TFM\TFM_back\OnGuardManager.WebAPI\bin\Debug\net8.0\logs\archives\log.2024-08-04 23_20_00.2728.log` (Fallback to dynamic wildcard)

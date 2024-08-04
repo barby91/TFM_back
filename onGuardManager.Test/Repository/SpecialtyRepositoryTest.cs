@@ -46,19 +46,25 @@ namespace onGuardManager.Test.Repository
 						{
 							Id = 1,
 							Description = "unidad1",
-							Name = "unidad1"
+							Name = "unidad1",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 2,
 							Description = "unidad2",
-							Name = "unidad2"
+							Name = "unidad2",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 9,
 							Description = "rotatorio",
-							Name = "rotatorio"
+							Name = "rotatorio",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						}
 					}
 				},
@@ -75,19 +81,25 @@ namespace onGuardManager.Test.Repository
 						{
 							Id = 7,
 							Description = "unidad7",
-							Name = "unidad7"
+							Name = "unidad7",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 8,
 							Description = "unidad8",
-							Name = "unidad8"
+							Name = "unidad8",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 9,
 							Description = "rotatorio",
-							Name = "rotatorio"
+							Name = "rotatorio",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						}
 					}
 				}
@@ -116,6 +128,8 @@ namespace onGuardManager.Test.Repository
 					Assert.That(actual[i].Unities.ToList()[j].Name, Is.EqualTo(expected[i].Unities.ToList()[j].Name));
 					Assert.That(actual[i].Unities.ToList()[j].Description, Is.EqualTo(expected[i].Unities.ToList()[j].Description));
 					Assert.That(actual[i].Unities.ToList()[j].IdSpecialty, Is.EqualTo(expected[i].Unities.ToList()[j].IdSpecialty));
+					Assert.That(actual[i].Unities.ToList()[j].MaxByDay, Is.EqualTo(expected[i].Unities.ToList()[j].MaxByDay));
+					Assert.That(actual[i].Unities.ToList()[j].MaxByDayWeekend, Is.EqualTo(expected[i].Unities.ToList()[j].MaxByDayWeekend));
 				}
 			}
 			#endregion
@@ -155,13 +169,17 @@ namespace onGuardManager.Test.Repository
 						{
 							Id = 1,
 							Description = "unidad1",
-							Name = "unidad1"
+							Name = "unidad1",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 2,
 							Description = "unidad2",
-							Name = "unidad2"
+							Name = "unidad2",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						}
 					}
 				},
@@ -178,13 +196,17 @@ namespace onGuardManager.Test.Repository
 						{
 							Id = 7,
 							Description = "unidad7",
-							Name = "unidad7"
+							Name = "unidad7",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 8,
 							Description = "unidad8",
-							Name = "unidad8"
+							Name = "unidad8",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						}
 					}
 				}
@@ -213,6 +235,8 @@ namespace onGuardManager.Test.Repository
 					Assert.That(actual[i].Unities.ToList()[j].Name, Is.EqualTo(expected[i].Unities.ToList()[j].Name));
 					Assert.That(actual[i].Unities.ToList()[j].Description, Is.EqualTo(expected[i].Unities.ToList()[j].Description));
 					Assert.That(actual[i].Unities.ToList()[j].IdSpecialty, Is.EqualTo(expected[i].Unities.ToList()[j].IdSpecialty));
+					Assert.That(actual[i].Unities.ToList()[j].MaxByDay, Is.EqualTo(expected[i].Unities.ToList()[j].MaxByDay));
+					Assert.That(actual[i].Unities.ToList()[j].MaxByDayWeekend, Is.EqualTo(expected[i].Unities.ToList()[j].MaxByDayWeekend));
 				}
 			}
 			#endregion
@@ -578,13 +602,17 @@ namespace onGuardManager.Test.Repository
 						{
 							Id = 1,
 							Description = "unidad1",
-							Name = "unidad1"
+							Name = "unidad1",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 2,
 							Description = "unidad2",
-							Name = "unidad2"
+							Name = "unidad2",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						}
 					}
 				},
@@ -601,13 +629,17 @@ namespace onGuardManager.Test.Repository
 						{
 							Id = 3,
 							Description = "unidad3",
-							Name = "unidad3"
+							Name = "unidad3",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 4,
 							Description = "unidad4",
-							Name = "unidad4"
+							Name = "unidad4",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						}
 					}
 				},
@@ -624,13 +656,17 @@ namespace onGuardManager.Test.Repository
 						{
 							Id = 5,
 							Description = "unidad5",
-							Name = "unidad5"
+							Name = "unidad5",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 6,
 							Description = "unidad6",
-							Name = "unidad6"
+							Name = "unidad6",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						}
 					}
 				},
@@ -647,13 +683,17 @@ namespace onGuardManager.Test.Repository
 						{
 							Id = 7,
 							Description = "unidad7",
-							Name = "unidad7"
+							Name = "unidad7",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						},
 						new Unity()
 						{
 							Id = 8,
 							Description = "unidad8",
-							Name = "unidad8"
+							Name = "unidad8",
+							MaxByDay= 2,
+							MaxByDayWeekend=3
 						}
 					}
 				}
@@ -669,62 +709,80 @@ namespace onGuardManager.Test.Repository
 					Id = 1,
 					Description = "unidad1",
 					Name = "unidad1",
-					IdSpecialty = 1
+					IdSpecialty = 1,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 2,
 					Description = "unidad2",
 					Name = "unidad2",
-					IdSpecialty = 1
+					IdSpecialty = 1,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 3,
 					Description = "unidad3",
 					Name = "unidad3",
-					IdSpecialty = 2
+					IdSpecialty = 2,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 4,
 					Description = "unidad4",
 					Name = "unidad4",
-					IdSpecialty = 2
+					IdSpecialty = 2,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 5,
 					Description = "unidad5",
 					Name = "unidad5",
-					IdSpecialty = 3
+					IdSpecialty = 3,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 6,
 					Description = "unidad6",
 					Name = "unidad6",
-					IdSpecialty = 3
+					IdSpecialty = 3,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				}, 
 				new Unity()
 				{
 					Id = 7,
 					Description = "unidad7",
 					Name = "unidad7",
-					IdSpecialty = 4
+					IdSpecialty = 4,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 8,
 					Description = "unidad8",
 					Name = "unidad8",
-					IdSpecialty = 4
+					IdSpecialty = 4,
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				},
 				new Unity()
 				{
 					Id = 9,
 					Description = "rotatorio",
-					Name = "rotatorio"
+					Name = "rotatorio",
+					MaxByDay= 2,
+					MaxByDayWeekend=3
 				}
 			};
 		}

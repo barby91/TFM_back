@@ -21,7 +21,7 @@ try
 		options.AddPolicy(name: "AllowOrigin",
 						  policy =>
 						  {
-							  policy.WithOrigins("https://localhost:44351", "http://localhost:4200")
+							  policy.WithOrigins("http://localhost:4200")
 									.AllowAnyHeader()
 									.AllowAnyMethod();
 						  });
