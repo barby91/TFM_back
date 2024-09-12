@@ -1044,7 +1044,8 @@ namespace onGuardManager.Bussiness.Service
 			}
 
 			//R4 Máx 6 guardias por cabeza, aunque el máximo legal son 7
-			if (days.Count(d => d.assigned.Exists(u => u.Id == us.user.Id)) == totalGuards[(int)us.user.IdSpecialty])
+			if (days.Count(d => d.assigned.Exists(u => u.Id == us.user.Id)) == totalGuards[(int)us.user.IdSpecialty] &&
+				days.Exists(d => d.absents.Keys.Contains(us.user) && d.absents[us.user] == totalGuards + " guardias asignadas"))
 			{
 				//queda inelegible para el resto de días
 				foreach (Day d in days.Where(d => d.absents.Keys.Contains(us.user) && d.absents[us.user] == totalGuards+" guardias asignadas"))

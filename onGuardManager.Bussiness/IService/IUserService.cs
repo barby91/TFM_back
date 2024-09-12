@@ -70,5 +70,7 @@ namespace onGuardManager.Bussiness.IService
 		/// <param name="id"></param>
 		/// <returns></returns>
 		Task<bool> DeleteUser(int id);
+
+		Task<List<User>> GetAllUsersByCenterRules(int idCenter, bool addAskedHoliday = false);
 	}
 }

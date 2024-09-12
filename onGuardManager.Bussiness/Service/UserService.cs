@@ -257,6 +257,23 @@ namespace onGuardManager.Bussiness.Service
 				throw;
 			}
 		}
+		public async Task<List<User>> GetAllUsersByCenterRules(int idCenter, bool addAskedHoliday = false)
+		{
+			try
+			{
+				return await _userRepository.GetAllUsersByCenter(idCenter, addAskedHoliday);
+			}
+			catch (Exception ex)
+			{
+				StringBuilder sb = new StringBuilder("");
+				sb.AppendFormat(" Se ha producido un error en {0} de {1} al obtener los usuarios. La traza es: {2}: ",
+								this.GetType().Name, MethodBase.GetCurrentMethod(), ex.ToString());
+				LogClass.WriteLog(ErrorWrite.Error, sb.ToString());
+				throw;
+			}
+		}
+
+
 		#endregion
 	}
 }
