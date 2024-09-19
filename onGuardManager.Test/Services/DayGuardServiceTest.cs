@@ -77,15 +77,31 @@ namespace onGuardManager.Test.Repository
 		
 		[TestCaseSource(nameof(GetDeleteGuardsCase))]
 		[Test]
-		public void DayGuardServiceTestDeletePreviousGuard(GuardInterval guardInterval, bool expected)
+		//public void DayGuardServiceTestDeletePreviousGuard(GuardInterval guardInterval, bool expected)
+		//{
+		//	#region Arrange
+		//	_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).ReturnsAsync(expected);
+		//	#endregion
+
+		//	#region Actual
+
+		//	bool actual = _serviceDayGuard.DeletePreviousGuard(guardInterval).Result;
+		//	#endregion
+
+		//	#region Assert
+		//	Assert.That(actual, Is.EqualTo(expected));
+		//	#endregion
+		//}
+
+		public void DayGuardServiceTestDeletePreviousGuard(int month, bool expected)
 		{
 			#region Arrange
-			_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).ReturnsAsync(expected);
+			_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<int>())).ReturnsAsync(expected);
 			#endregion
 
 			#region Actual
-			
-			bool actual = _serviceDayGuard.DeletePreviousGuard(guardInterval).Result;
+
+			bool actual = _serviceDayGuard.DeletePreviousGuard(month).Result;
 			#endregion
 
 			#region Assert
@@ -94,17 +110,27 @@ namespace onGuardManager.Test.Repository
 		}
 
 		[Test]
+		//public void DayGuardServiceTestGetlDeletePreviousGuardException()
+		//{
+		//	#region Arrange
+		//	_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).Throws(() => new Exception());
+		//	#endregion
+
+		//	Assert.ThrowsAsync<Exception>(async () => await _serviceDayGuard.DeletePreviousGuard(new GuardInterval()
+		//	{
+		//		firstDayInterval = It.IsAny<DateOnly>(),
+		//		lastDayInterval = It.IsAny<DateOnly>()
+		//	}
+		//	));
+		//}
+
 		public void DayGuardServiceTestGetlDeletePreviousGuardException()
 		{
 			#region Arrange
-			_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).Throws(() => new Exception());
+			_dayGuardRepository.Setup(ur => ur.DeletePreviousGuard(It.IsAny<int>())).Throws(() => new Exception());
 			#endregion
 
-			Assert.ThrowsAsync<Exception>(async() => await _serviceDayGuard.DeletePreviousGuard(new GuardInterval() { 
-																										firstDayInterval = It.IsAny<DateOnly>(),
-																										lastDayInterval = It.IsAny<DateOnly>()
-																									}
-			));
+			Assert.ThrowsAsync<Exception>(async () => await _serviceDayGuard.DeletePreviousGuard(It.IsAny<int>()));
 		}
 
 		[TestCaseSource(nameof(GetUserStatsCase))]
@@ -133,7 +159,8 @@ namespace onGuardManager.Test.Repository
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2024, 10)).ReturnsAsync(GetFakeDayGuards().Where(dg => dg.Day.Month == 10).ToList());
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2024, 11)).ReturnsAsync(GetFakeDayGuards().Where(dg => dg.Day.Month == 11).ToList());
 			_dayGuardRepository.Setup(dg => dg.GetGuards(It.IsAny<int>(), 2024, 12)).ReturnsAsync(GetFakeDayGuards().Where(dg => dg.Day.Month == 12).ToList());
-			_dayGuardRepository.Setup(dg => dg.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).ReturnsAsync(DeleteGuardReturn);
+			//_dayGuardRepository.Setup(dg => dg.DeletePreviousGuard(It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).ReturnsAsync(DeleteGuardReturn);
+			_dayGuardRepository.Setup(dg => dg.DeletePreviousGuard(It.IsAny<int>())).ReturnsAsync(DeleteGuardReturn);
 			_dayGuardRepository.Setup(dg => dg.SaveGuard(It.IsAny<DayGuard>())).ReturnsAsync(SaveGuardReturn);
 			#endregion
 
@@ -1634,45 +1661,179 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 			}
 		};
 
+		//private static object[] GetUserStatsCase =
+		//{
+		//	new object[] 
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 0,
+		//			groupOfWeeks = 1,
+		//			year = 2024
+		//		}, "OK", GetFakeUserWithHolidays(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 1,
+		//			year = 2024
+		//		}, "OK", GetFakeUserWithHolidays(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 2,
+		//			year = 2024
+		//		}, "OK", GetFakeUserWithHolidays(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 0,
+		//			groupOfWeeks = 0,
+		//			year = 2024
+		//		}, "OK", GetFakeUserWithHolidays(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 0,
+		//			year = 2024
+		//		}, "OK", GetFakeUserWithHolidays(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 1,
+		//			year = 2024
+		//		}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysCuatruplets(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 2,
+		//			year = 2024
+		//		}, "Error al guardar la guardia", GetFakeUserWithHolidays(), false, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 2,
+		//			year = 2024
+		//		}, "Error al borrar la guardia previamente calculada", GetFakeUserWithHolidays(), false, false
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 0,
+		//			groupOfWeeks = 5,
+		//			year = 2024
+		//		}, "OK", GetFakeUserWithHolidays(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 0,
+		//			groupOfWeeks = 11,
+		//			year = 2024
+		//		}, "OK", GetFakeUserWithHolidays(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 0,
+		//			groupOfWeeks = 1,
+		//			year = 2024
+		//		}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysTriplets(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 1,
+		//			year = 2024
+		//		}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysTriplets(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 0,
+		//			groupOfWeeks = 0,
+		//			year = 2024
+		//		}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysNotSolution(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 0,
+		//			year = 2024
+		//		}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysNotSolution(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 1,
+		//			groupOfWeeks = 0,
+		//			year = 2025
+		//		}, "OK", GetFakeUserWithHolidays(), true, true
+		//	},
+		//	new object[]
+		//	{
+		//		new GuardRequest()
+		//		{
+		//			idCenter = 1,
+		//			idSpecialty = 0,
+		//			groupOfWeeks = 1,
+		//			year = 2024
+		//		}, "OK", GetFakeUserWithHolidaysSpecialty(), true, true
+		//	}
+		//};
+
 		private static object[] GetUserStatsCase =
 		{
-			new object[] 
-			{
-				new GuardRequest()
-				{
-					idCenter = 1,
-					idSpecialty = 0,
-					groupOfWeeks = 1,
-					year = 2024
-				}, "OK", GetFakeUserWithHolidays(), true, true
-			},
-			new object[]
-			{
-				new GuardRequest()
-				{
-					idCenter = 1,
-					idSpecialty = 1,
-					groupOfWeeks = 1,
-					year = 2024
-				}, "OK", GetFakeUserWithHolidays(), true, true
-			},
-			new object[]
-			{
-				new GuardRequest()
-				{
-					idCenter = 1,
-					idSpecialty = 1,
-					groupOfWeeks = 2,
-					year = 2024
-				}, "OK", GetFakeUserWithHolidays(), true, true
-			},
 			new object[]
 			{
 				new GuardRequest()
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					groupOfWeeks = 0,
+					month = 1,
 					year = 2024
 				}, "OK", GetFakeUserWithHolidays(), true, true
 			},
@@ -1682,7 +1843,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					groupOfWeeks = 0,
+					month = 1,
 					year = 2024
 				}, "OK", GetFakeUserWithHolidays(), true, true
 			},
@@ -1692,7 +1853,37 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					groupOfWeeks = 1,
+					month = 2,
+					year = 2024
+				}, "OK", GetFakeUserWithHolidays(), true, true
+			},
+			new object[]
+			{
+				new GuardRequest()
+				{
+					idCenter = 1,
+					idSpecialty = 0,
+					month = 0,
+					year = 2024
+				}, "OK", GetFakeUserWithHolidays(), true, true
+			},
+			new object[]
+			{
+				new GuardRequest()
+				{
+					idCenter = 1,
+					idSpecialty = 1,
+					month = 0,
+					year = 2024
+				}, "OK", GetFakeUserWithHolidays(), true, true
+			},
+			new object[]
+			{
+				new GuardRequest()
+				{
+					idCenter = 1,
+					idSpecialty = 1,
+					month = 1,
 					year = 2024
 				}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysCuatruplets(), true, true
 			},
@@ -1702,7 +1893,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					groupOfWeeks = 2,
+					month = 2,
 					year = 2024
 				}, "Error al guardar la guardia", GetFakeUserWithHolidays(), false, true
 			},
@@ -1712,7 +1903,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					groupOfWeeks = 2,
+					month = 2,
 					year = 2024
 				}, "Error al borrar la guardia previamente calculada", GetFakeUserWithHolidays(), false, false
 			},
@@ -1722,7 +1913,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					groupOfWeeks = 5,
+					month = 5,
 					year = 2024
 				}, "OK", GetFakeUserWithHolidays(), true, true
 			},
@@ -1732,7 +1923,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					groupOfWeeks = 11,
+					month = 11,
 					year = 2024
 				}, "OK", GetFakeUserWithHolidays(), true, true
 			},
@@ -1742,7 +1933,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					groupOfWeeks = 1,
+					month = 1,
 					year = 2024
 				}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysTriplets(), true, true
 			},
@@ -1752,7 +1943,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					groupOfWeeks = 1,
+					month = 1,
 					year = 2024
 				}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysTriplets(), true, true
 			},
@@ -1762,7 +1953,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					groupOfWeeks = 0,
+					month = 0,
 					year = 2024
 				}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysNotSolution(), true, true
 			},
@@ -1772,7 +1963,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					groupOfWeeks = 0,
+					month = 0,
 					year = 2024
 				}, "No se pueden asignar las guardias del grupo de semanas ", GetFakeUserWithHolidaysNotSolution(), true, true
 			},
@@ -1782,7 +1973,7 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 1,
-					groupOfWeeks = 0,
+					month = 0,
 					year = 2025
 				}, "OK", GetFakeUserWithHolidays(), true, true
 			},
@@ -1792,24 +1983,30 @@ new User(){Id=60159, Name="usuario18", IdCenter = 1, IdLevel=3, IdSpecialty=1, S
 				{
 					idCenter = 1,
 					idSpecialty = 0,
-					groupOfWeeks = 1,
+					month = 1,
 					year = 2024
 				}, "OK", GetFakeUserWithHolidaysSpecialty(), true, true
 			}
 		};
 
+		//private static object[] GetDeleteGuardsCase =
+		//{
+		//	new object[] { new GuardInterval()
+		//	{
+		//		firstDayInterval = new DateOnly(2024, 1, 1),
+		//		lastDayInterval = new DateOnly(2024, 1, 28)
+		//	}, true},
+		//	new object[] { new GuardInterval()
+		//	{
+		//		firstDayInterval = new DateOnly(2024, 12, 30),
+		//		lastDayInterval =  new DateOnly(2025, 1, 26)
+		//	}, true},
+		//};
+
 		private static object[] GetDeleteGuardsCase =
 		{
-			new object[] { new GuardInterval()
-			{
-				firstDayInterval = new DateOnly(2024, 1, 1),
-				lastDayInterval = new DateOnly(2024, 1, 28)
-			}, true},
-			new object[] { new GuardInterval()
-			{
-				firstDayInterval = new DateOnly(2024, 12, 30),
-				lastDayInterval =  new DateOnly(2025, 1, 26)
-			}, true},
+			new object[] { 1, true},
+			new object[] { 12, true},
 		};
 
 		private static object[] GetGuardsCase =

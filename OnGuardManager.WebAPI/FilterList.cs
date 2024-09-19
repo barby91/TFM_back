@@ -1,8 +1,11 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Azure;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using onGuardManager.Models;
+using onGuardManager.Models.Entities;
 using System.Collections;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using System.Reflection.Metadata;
 
@@ -10,6 +13,102 @@ namespace onGuardManager.WebAPI
 {
 	public static class FilterList<TEntity>
 	{
+
+		public static IQueryable<TEntity> FilterQuerySimple(IQueryable<TEntity> query, string property,
+															ExpressionType operation, string value)
+		{
+			IQueryable<TEntity> result;
+
+			//primero creamos el parámetro principal u => u
+			ParameterExpression param = Expression.Parameter(typeof(TEntity), "u");
+
+			//a continuación se crea el cuerpo de la expresión
+			Expression body = (Expression)param;
+
+			List<LambdaExpression> lambdas = new List<LambdaExpression>();
+			MethodCallExpression queryExpression;
+						
+			//se crea la propiedad u.propName
+			string propName = property;
+			body = Expression.PropertyOrField(body, propName);
+
+			//Se obtiene una expresión constante con el valor indicado
+			ConstantExpression constant = Expression.Constant(ChangeType(value));
+			switch(operation) //se selecciona la expresión de igualdad
+			{
+				case ExpressionType.Equal:
+					body = Expression.Equal(body, constant);
+					break;
+				case ExpressionType.LessThan:
+					body = Expression.LessThan(body, constant);
+					break;
+				case ExpressionType.LessThanOrEqual:
+					body = Expression.LessThanOrEqual(body, constant);
+					break;
+				case ExpressionType.GreaterThan:
+					body = Expression.GreaterThan(body, constant);
+					break;
+				case ExpressionType.GreaterThanOrEqual:
+					body = Expression.GreaterThanOrEqual(body, constant);
+					break;
+			}
+			lambdas.Add(Expression.Lambda(body, param));
+
+			queryExpression = Expression.Call(typeof(Queryable), "Where", new[] { typeof(TEntity) }, query.Expression, lambdas[0]);
+			result = query.Provider.CreateQuery<TEntity>(queryExpression);
+			
+			return result;
+		}
+
+		public static IQueryable<TEntity> FilterQueryMultipleProperty(IQueryable<TEntity> query, string property,
+															ExpressionType operation, string value)
+		{
+			IQueryable<TEntity> result;
+
+			//primero creamos el parámetro principal u => u
+			ParameterExpression param = Expression.Parameter(typeof(TEntity), "u");
+
+			//a continuación se crea el cuerpo de la expresión
+			Expression body = (Expression)param;
+
+			List<LambdaExpression> lambdas = new List<LambdaExpression>();
+			MethodCallExpression queryExpression;
+
+			string propName = property;
+			foreach (string propertyName in propName.Split("."))
+			{
+				body = Expression.PropertyOrField(body, propertyName);
+			}
+			//Se obtiene una expresión constante con el valor indicado
+			ConstantExpression constant = Expression.Constant(ChangeType(value));
+			switch (operation) //se selecciona la expresión de igualdad
+			{
+				case ExpressionType.Equal:
+					body = Expression.Equal(body, constant);
+					break;
+				case ExpressionType.LessThan:
+					body = Expression.LessThan(body, constant);
+					break;
+				case ExpressionType.LessThanOrEqual:
+					body = Expression.LessThanOrEqual(body, constant);
+					break;
+				case ExpressionType.GreaterThan:
+					body = Expression.GreaterThan(body, constant);
+					break;
+				case ExpressionType.GreaterThanOrEqual:
+					body = Expression.GreaterThanOrEqual(body, constant);
+					break;
+			}
+
+			lambdas.Add(Expression.Lambda(body, param));
+
+			queryExpression = Expression.Call(typeof(Queryable), "Where", new[] { typeof(TEntity) }, query.Expression, lambdas[0]);
+			result = query.Provider.CreateQuery<TEntity>(queryExpression);
+
+			return result;
+		}
+
+
 		public static IQueryable<TEntity> FilterQuery(IQueryable<TEntity> query, string properties, 
 													string subMethod, List<ExpressionType> subMethodOperations, string submehtodValues,
 													string subProp, List<ExpressionType> subPropOperations, string subPropValues)
@@ -62,7 +161,7 @@ namespace onGuardManager.WebAPI
 
 					if (subMethodSplit[i].Equals("Count"))
 					{
-						object value = ChangeType("int", submehtodValuesSplit[i]);
+						object value = ChangeType(submehtodValuesSplit[i]);
 						lambdas.Add(Expression.Lambda(Expression.MakeBinary(subMethodOperations[i],
 																							body,
 																							Expression.Constant(value)),
@@ -91,9 +190,26 @@ namespace onGuardManager.WebAPI
 
 					if (prop != null)
 					{
-						object value = ChangeType(prop.PropertyType.Name, subPropValuesSplit[i]);
-						ConstantExpression constant = Expression.Constant(Convert.ChangeType(value, prop.PropertyType));
-						body = Expression.Equal(body, constant);
+						object value = ChangeType(subPropValuesSplit[i]);
+						ConstantExpression constant = Expression.Constant(value);
+						switch (subPropOperations[i]) //se selecciona la expresión de igualdad
+						{
+							case ExpressionType.Equal:
+								body = Expression.Equal(body, constant);
+								break;
+							case ExpressionType.LessThan:
+								body = Expression.LessThan(body, constant);
+								break;
+							case ExpressionType.LessThanOrEqual:
+								body = Expression.LessThanOrEqual(body, constant);
+								break;
+							case ExpressionType.GreaterThan:
+								body = Expression.GreaterThan(body, constant);
+								break;
+							case ExpressionType.GreaterThanOrEqual:
+								body = Expression.GreaterThanOrEqual(body, constant);
+								break;
+						}
 					}
 
 					lambdas.Add(Expression.Lambda(body, param));
@@ -203,26 +319,25 @@ namespace onGuardManager.WebAPI
 			return itemCount;
 		}
 
-		private static object ChangeType(string typeName, string value)
+		private static object ChangeType(string value)
 		{
 			object newValue;
-			switch (typeName)
+
+			if (int.TryParse(value, out int entero))
 			{
-				case "DateOnly":
-					newValue = DateOnly.Parse(value);
-					break;
-				case "int":
-					newValue = int.Parse(value);
-					break;
-				case "decimal":
-					newValue = decimal.Parse(value);
-					break;
-				case "float":
-					newValue = float.Parse(value);
-					break;
-				default:
-					newValue = value;
-					break;
+				newValue = entero;
+			}
+			else if(decimal.TryParse(value, out decimal decim))
+			{
+				newValue = decim;
+			}
+			else if (float.TryParse(value, out float flo))
+			{
+				newValue = flo;
+			}
+			else
+			{
+				newValue = value;
 			}
 
 			return newValue;

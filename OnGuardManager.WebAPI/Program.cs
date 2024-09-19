@@ -29,7 +29,7 @@ try
 		options.AddPolicy(name: "AllowOrigin",
 						  policy =>
 						  {
-							  policy.WithOrigins("https://main.dvoyy061ycswa.amplifyapp.com")
+							  policy.WithOrigins("https://main.dvoyy061ycswa.amplifyapp.com", "http://127.0.0.1:81")
 									.AllowAnyHeader()
 									.AllowAnyMethod();
 						  });

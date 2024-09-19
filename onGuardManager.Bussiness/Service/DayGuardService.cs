@@ -20,7 +20,8 @@ namespace onGuardManager.Bussiness.Service
 		private readonly ISpecialtyRepository<Specialty> _specialtyRepository;
 		private readonly IUnityRepository<Unity> _unityRepository;
 		private Dictionary<int, int> totalGuards;
-		private static List<GuardInterval> guardIntervals = new List<GuardInterval>();
+		//private static List<GuardInterval> guardIntervals = new List<GuardInterval>();
+		private static int maxUsersAssignedByDay = 5;
 		//private int maxWeekends = 0;
         #endregion
 
@@ -57,21 +58,160 @@ namespace onGuardManager.Bussiness.Service
 			}
 		}
 
-		public async Task<bool> DeletePreviousGuard(GuardInterval guardInterval)
+		//public async Task<bool> DeletePreviousGuard(GuardInterval guardInterval)
+		//{
+		//	try
+		//	{
+		//		return await _dayGuardRepository.DeletePreviousGuard(guardInterval.firstDayInterval, guardInterval.lastDayInterval);
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		StringBuilder sb = new StringBuilder("");
+		//		sb.AppendFormat(" Se ha producido un error al borrar las asignaciones de la guardia del mes {0}." +
+		//						"La traza es: {1}: ", guardInterval.firstDayInterval.ToString() + " - " + guardInterval.lastDayInterval.ToString(), ex.ToString());
+		//		LogClass.WriteLog(ErrorWrite.Error, sb.ToString());
+		//		throw;
+		//	}
+		//}
+
+		public async Task<bool> DeletePreviousGuard(int month)
 		{
 			try
 			{
-				return await _dayGuardRepository.DeletePreviousGuard(guardInterval.firstDayInterval, guardInterval.lastDayInterval);
+				return await _dayGuardRepository.DeletePreviousGuard(month);
 			}
 			catch (Exception ex)
 			{
 				StringBuilder sb = new StringBuilder("");
 				sb.AppendFormat(" Se ha producido un error al borrar las asignaciones de la guardia del mes {0}." +
-								"La traza es: {1}: ", guardInterval.firstDayInterval.ToString() + " - " + guardInterval.lastDayInterval.ToString(), ex.ToString());
+								"La traza es: {1}: ", month, ex.ToString());
 				LogClass.WriteLog(ErrorWrite.Error, sb.ToString());
 				throw;
 			}
 		}
+
+		//public async Task<string> GetUserStats(GuardRequest guardRequest)
+		//{
+		//	int totalDaysYear = DateTime.IsLeapYear(guardRequest.year) ? 366 : 365;
+		//	DateOnly firstDay = new DateOnly(guardRequest.year, 1, 1);
+
+		//	if (firstDay.DayOfWeek != DayOfWeek.Monday)
+		//	{
+		//		int daysToAdd = ((int)DayOfWeek.Monday - (int)firstDay.DayOfWeek + 7) % 7;
+		//		firstDay = firstDay.AddDays(daysToAdd);
+		//	}
+
+		//	while (guardIntervals.Count <= (totalDaysYear / 30))
+		//	{
+		//		guardIntervals.Add(new GuardInterval()
+		//		{
+		//			firstDayInterval = firstDay,
+		//			lastDayInterval = firstDay.AddDays(29)
+		//		});
+
+		//		firstDay = firstDay.AddDays(30);
+		//	}
+
+		//	//obtenemos todos los usuarios de un centro o asociados a una especialidad
+		//	List<User> users;
+		//	List<UserStats> userStats = new List<UserStats>();
+		//	List<Unity> unities = new List<Unity>();
+		//	List<PublicHoliday> publicHolidays = await _publicHolidayRepository.GetAllPublicHolidaysByCenter(guardRequest.idCenter);
+		//	totalGuards = new Dictionary<int, int>();
+		//	if (guardRequest.idSpecialty == 0)
+		//	{
+		//		users = await _userRepository.GetAllUsersByCenter(guardRequest.idCenter, true);
+		//		List<Specialty> specialties = await _specialtyRepository.GetAllSpecialtiesWithoutCommonUnitiesByCenter(guardRequest.idCenter);
+		//		foreach (Specialty specialty in specialties)
+		//		{
+		//			unities.AddRange(specialty.Unities.Where(nu => unities.TrueForAll(u => u.Id != nu.Id)));
+		//			totalGuards.Add((int)specialty.Id, (int)specialty.MaxGuards);
+		//		}
+		//	}
+		//	else
+		//	{
+		//		users = await _userRepository.GetAllUsersBySpecialty(guardRequest.idSpecialty);
+		//		Specialty? specialty = await _specialtyRepository.GetSpecialtyById(guardRequest.idSpecialty);
+		//		if (specialty != null)
+		//		{
+		//			unities.AddRange(specialty.Unities);
+		//			totalGuards.Add((int)specialty.Id, (int)specialty.MaxGuards);
+		//		}
+		//	}
+
+		//	unities.AddRange(await _unityRepository.GetAllCommonUnities(guardRequest.idCenter));
+
+		//	//recorremos cada usuario para inicializar sus estadísticas
+
+		//	//obtenemos las guardias previas para 
+		//	List<DayGuard> previousGuards;
+		//	int indexFirst = guardRequest.groupOfWeeks - 1;
+		//	if (guardRequest.groupOfWeeks == 1)
+		//	{
+		//		previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year - 1, 12);
+		//	}
+		//	else
+		//	{
+		//		DateTime now = DateTime.Now;
+		//		indexFirst = guardRequest.groupOfWeeks > 0 ? guardRequest.groupOfWeeks - 1 :
+		//														 guardIntervals.IndexOf(guardIntervals.First(gi => now.CompareTo(gi.firstDayInterval.ToDateTime(new TimeOnly())) >= 0 &&
+		//																										   now.CompareTo(gi.lastDayInterval.ToDateTime(new TimeOnly())) <= 0)) + 1;
+		//		DateOnly startDateInterval = guardIntervals[indexFirst].firstDayInterval;
+		//		DateOnly endDateInterval = guardRequest.groupOfWeeks > 0 ? guardIntervals[guardRequest.groupOfWeeks - 1].firstDayInterval :
+		//										guardIntervals.Last().lastDayInterval;
+		//		previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year, 0);
+		//		previousGuards = previousGuards.Where(pg => pg.Day.CompareTo(startDateInterval) < 0 ||
+		//													pg.Day.CompareTo(endDateInterval) > 0).ToList();
+		//	}
+
+		//	foreach (User user in users)
+		//	{
+		//		//contamos los festivos realizados por cada usuario
+		//		List<DayGuard> userGuard = previousGuards.Where(g => g.assignedUsers.Select(a => a.Id).Contains(user.Id)).ToList();
+		//		int totalWeekends = userGuard.Count(ug => ug.Day.DayOfWeek == DayOfWeek.Saturday ||
+		//												  ug.Day.DayOfWeek == DayOfWeek.Sunday ||
+		//												  ug.Day.DayOfWeek == DayOfWeek.Friday);
+		//		int totalPublicHolidays = userGuard.Count(ug => publicHolidays.Select(ph => ph.Date)
+		//										   .Contains(ug.Day));
+		//		int totalUserGuards = userGuard.Count;
+		//		userStats.Add(new UserStats(user, guardIntervals[indexFirst].firstDayInterval.Month == 1 ? 0 : totalUserGuards, 
+		//										  guardIntervals[indexFirst].firstDayInterval.Month == 1 ? 0 : totalWeekends, 
+		//										  guardIntervals[indexFirst].firstDayInterval.Month == 1 ? 0 : totalPublicHolidays));
+		//	}
+
+		//	if (guardRequest.groupOfWeeks > 0)
+		//	{
+		//		return await AsignMonthGuards(guardRequest.groupOfWeeks-1, guardRequest.idCenter, users, previousGuards,
+		//									  unities, userStats, publicHolidays);
+		//	}
+		//	else
+		//	{
+		//		string result = "";
+		//		bool continueLoop = true;
+		//		int i = indexFirst;
+
+		//		while (i < guardIntervals.Count && continueLoop)
+		//		{
+		//			result = await AsignMonthGuards(i, guardRequest.idCenter, users, previousGuards,
+		//											unities, userStats, publicHolidays);
+		//			if(!result.Contains("OK"))
+		//			{
+		//				continueLoop = false;
+		//			}
+
+
+		//			previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year, 0);
+		//			previousGuards = previousGuards.Where(pg => pg.Day.CompareTo(guardIntervals[i].firstDayInterval) < 0 ||
+		//														pg.Day.CompareTo(guardIntervals.Last().lastDayInterval) > 0).ToList();
+
+		//			//reseteamos el total de fines de semana y festivos por mes
+		//			userStats.ForEach(u => u.totalGuardMonth = u.totalWeekendsMonth = u.totaPublicHolidaysMonth = 0);
+		//			i++;
+		//		}
+
+		//		return await Task.FromResult(result);
+		//	}
+		//}
 
 		public async Task<string> GetUserStats(GuardRequest guardRequest)
 		{
@@ -82,17 +222,6 @@ namespace onGuardManager.Bussiness.Service
 			{
 				int daysToAdd = ((int)DayOfWeek.Monday - (int)firstDay.DayOfWeek + 7) % 7;
 				firstDay = firstDay.AddDays(daysToAdd);
-			}
-
-			while (guardIntervals.Count <= (totalDaysYear / 30))
-			{
-				guardIntervals.Add(new GuardInterval()
-				{
-					firstDayInterval = firstDay,
-					lastDayInterval = firstDay.AddDays(29)
-				});
-
-				firstDay = firstDay.AddDays(30);
 			}
 
 			//obtenemos todos los usuarios de un centro o asociados a una especialidad
@@ -128,23 +257,14 @@ namespace onGuardManager.Bussiness.Service
 
 			//obtenemos las guardias previas para 
 			List<DayGuard> previousGuards;
-			int indexFirst = guardRequest.groupOfWeeks - 1;
-			if (guardRequest.groupOfWeeks == 1)
+			if (guardRequest.month == 1)
 			{
 				previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year - 1, 12);
 			}
 			else
 			{
-				DateTime now = DateTime.Now;
-				indexFirst = guardRequest.groupOfWeeks > 0 ? guardRequest.groupOfWeeks - 1 :
-																 guardIntervals.IndexOf(guardIntervals.First(gi => now.CompareTo(gi.firstDayInterval.ToDateTime(new TimeOnly())) >= 0 &&
-																												   now.CompareTo(gi.lastDayInterval.ToDateTime(new TimeOnly())) <= 0)) + 1;
-				DateOnly startDateInterval = guardIntervals[indexFirst].firstDayInterval;
-				DateOnly endDateInterval = guardRequest.groupOfWeeks > 0 ? guardIntervals[guardRequest.groupOfWeeks - 1].firstDayInterval :
-												guardIntervals.Last().lastDayInterval;
 				previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year, 0);
-				previousGuards = previousGuards.Where(pg => pg.Day.CompareTo(startDateInterval) < 0 ||
-															pg.Day.CompareTo(endDateInterval) > 0).ToList();
+				previousGuards = previousGuards.Where(pg => pg.Day.Month != (guardRequest.month > 0 ? guardRequest.month : (DateTime.Now.Month + 1))).ToList();
 			}
 
 			foreach (User user in users)
@@ -157,39 +277,43 @@ namespace onGuardManager.Bussiness.Service
 				int totalPublicHolidays = userGuard.Count(ug => publicHolidays.Select(ph => ph.Date)
 												   .Contains(ug.Day));
 				int totalUserGuards = userGuard.Count;
-				userStats.Add(new UserStats(user, guardIntervals[indexFirst].firstDayInterval.Month == 1 ? 0 : totalUserGuards, 
-												  guardIntervals[indexFirst].firstDayInterval.Month == 1 ? 0 : totalWeekends, 
-												  guardIntervals[indexFirst].firstDayInterval.Month == 1 ? 0 : totalPublicHolidays));
+				userStats.Add(new UserStats(user, guardRequest.month == 1 ? 0 : totalUserGuards, guardRequest.month == 1 ? 0 : totalWeekends, guardRequest.month == 1 ? 0 : totalPublicHolidays));
 			}
-			
-			if (guardRequest.groupOfWeeks > 0)
+
+			if (guardRequest.month > 0)
 			{
-				return await AsignMonthGuards(guardRequest.groupOfWeeks-1, guardRequest.idCenter, users, previousGuards,
+				return await AsignMonthGuards(guardRequest.month, guardRequest.idCenter, users, previousGuards,
 											  unities, userStats, publicHolidays);
 			}
 			else
 			{
 				string result = "";
 				bool continueLoop = true;
-				int i = indexFirst;
+				int month = DateTime.Now.Month + 1;
 
-				while (i < guardIntervals.Count && continueLoop)
+				while (month <= 12 && continueLoop)
 				{
-					result = await AsignMonthGuards(i, guardRequest.idCenter, users, previousGuards,
+					result = await AsignMonthGuards(month, guardRequest.idCenter, users, previousGuards,
 													unities, userStats, publicHolidays);
-					if(!result.Contains("OK"))
+					if (!result.Contains("OK"))
 					{
 						continueLoop = false;
 					}
 
-					
-					previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year, 0);
-					previousGuards = previousGuards.Where(pg => pg.Day.CompareTo(guardIntervals[i].firstDayInterval) < 0 ||
-																pg.Day.CompareTo(guardIntervals.Last().lastDayInterval) > 0).ToList();
+					if (guardRequest.month == 1)
+
+					{
+						previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year - 1, 12);
+					}
+					else
+					{
+						previousGuards = await _dayGuardRepository.GetGuards(guardRequest.idCenter, DateTime.Now.Year, 0);
+						previousGuards = previousGuards.Where(pg => pg.Day.Month != guardRequest.month).ToList();
+					}
 
 					//reseteamos el total de fines de semana y festivos por mes
 					userStats.ForEach(u => u.totalGuardMonth = u.totalWeekendsMonth = u.totaPublicHolidaysMonth = 0);
-					i++;
+					month++;
 				}
 
 				return await Task.FromResult(result);
@@ -221,8 +345,166 @@ namespace onGuardManager.Bussiness.Service
 		#endregion
 
 		#region private methods
-		private async Task<string> AsignMonthGuards(int groupOfWeeks, int idCenter,
-													List<User> users, 
+		//private async Task<string> AsignMonthGuards(int groupOfWeeks, int idCenter,
+		//											List<User> users, 
+		//											List<DayGuard> previousGuards,
+		//											List<Unity> unities,
+		//											List<UserStats> userstats,
+		//											List<PublicHoliday> publicHolidays)
+		//{
+		//	List<Day> days = new List<Day>();
+		//	//recorremos los días del mes
+		//	DateOnly date = guardIntervals[groupOfWeeks].firstDayInterval;
+		//	int i = 0;
+		//	while (date.CompareTo(guardIntervals[groupOfWeeks].lastDayInterval) <= 0)
+		//	{
+		//		//calculamos los usuarios que no trabajen este día
+		//		Dictionary<User, string> absents = new Dictionary<User, string>();
+
+		//		foreach (User user in users.Where(u => u.AskedHolidays.Any(ah => ah.DateFrom <= date &&
+		//																		ah.DateTo >= date &&
+		//																		ah.IdStatus == (int)EnumHolidayStatus.Aprobado
+		//																 )
+		//										).ToList())
+		//		{
+		//			absents.Add(user, "Vacaciones");
+		//		}
+
+		//		Day newDay = new Day(date, absents);
+		//		if (i == 0 && previousGuards.Exists(pg => pg.Day == newDay.day.AddDays(-1)))
+		//		{
+		//			//los usuarios que estén en el último día del mes anterior son ilegibles para el día actual
+		//			foreach (User user in previousGuards.First(pg => pg.Day == newDay.day.AddDays(-1)).assignedUsers)
+		//			{
+		//				newDay.absents.Add(user, "día previo");
+		//			}
+		//		}
+		//		if (i < 2)
+		//		{
+		//			CalculateAbsentsUsersByPrevMonth(previousGuards, users, newDay);
+		//		}
+
+		//		days.Add(newDay);
+		//		i++;
+		//		date = date.AddDays(1);
+		//	}
+
+		//	if (!BacktrackingGuard(days, userstats, OrderDays(days), publicHolidays, unities))
+		//	{
+		//		return await Task.FromResult("No se pueden asignar las guardias del grupo de semanas " + guardIntervals[groupOfWeeks].firstDayInterval.ToString() + " - " + guardIntervals[groupOfWeeks].lastDayInterval.ToString());
+		//	}
+		//	else
+		//	{
+		//		if (await DeletePreviousGuard(guardIntervals[groupOfWeeks]))
+		//		{
+		//			//guardamos la asignación
+		//			bool result = true;
+		//			foreach (Day day in days)
+		//			{
+		//				DayGuard guard = new DayGuard()
+		//				{
+		//					Day = day.day,
+		//					assignedUsers = day.assigned
+		//				};
+
+		//				result = result && await SaveGuard(guard);
+		//			}
+
+		//			List<DayGuardModel> guards = GetGuards(idCenter, DateTime.Now.Year).Result;
+		//			GuardStats stat = new GuardStats()
+		//			{
+		//				TotalDobletes = 0,
+		//				TotalTripletes = 0,
+		//				TotalCuatripletes = 0,
+		//				users = new List<GuardUserStats>()
+		//			};
+
+		//			foreach (DayGuardModel guard in guards)
+		//			{
+
+		//				foreach (string name in guard.assignedUsers.Select(au => au.NameSurname))
+		//				{
+		//					if (stat.users.Exists(s => s.UserName == name))
+		//					{
+		//						stat.users.First(s => s.UserName == name).GuardByUser++;
+		//						if (guard.Day.DayOfWeek == DayOfWeek.Sunday || guard.Day.DayOfWeek == DayOfWeek.Saturday || guard.Day.DayOfWeek == DayOfWeek.Friday)
+		//						{
+		//							stat.users.First(s => s.UserName == name).WeekendsbyUser++;
+		//						}
+		//						else if (publicHolidays.Select(ph => ph.Date).Contains(guard.Day))
+		//						{
+		//							stat.users.First(s => s.UserName == name).HolidaysByUser++;
+		//						}
+		//					}
+		//					else
+		//					{
+		//						stat.users.Add(new GuardUserStats()
+		//						{
+		//							UserName = name,
+		//							GuardByUser = 1,
+		//							HolidaysByUser = (guard.Day.DayOfWeek != DayOfWeek.Sunday &&
+		//												guard.Day.DayOfWeek != DayOfWeek.Saturday &&
+		//												guard.Day.DayOfWeek != DayOfWeek.Friday &&
+		//												publicHolidays.Select(ph => ph.Date).Contains(guard.Day)) ? 1 : 0,
+		//							WeekendsbyUser = (guard.Day.DayOfWeek == DayOfWeek.Sunday ||
+		//												guard.Day.DayOfWeek == DayOfWeek.Saturday ||
+		//												guard.Day.DayOfWeek == DayOfWeek.Friday) ? 1 : 0
+		//						});
+		//					}
+		//				}
+
+		//				foreach (UserModel us in guard.assignedUsers)
+		//				{
+		//					stat.TotalDobletes += guards.Count(g => g.Day == guard.Day.AddDays(2) && g.assignedUsers.Any(au => au.NameSurname.Equals(us.NameSurname)));
+
+		//					//tripletes
+		//					if ((guards.Exists(d => d.Day == guard.Day.AddDays(2) &&
+		//										d.assignedUsers.Any(a => a.NameSurname.Equals(us.NameSurname))) &&
+		//						guards.Exists(d => d.Day == guard.Day.AddDays(4) &&
+		//										d.assignedUsers.Any(a => a.NameSurname.Equals(us.NameSurname)))
+		//						))
+		//					{
+		//						stat.TotalTripletes++;
+		//					}
+
+		//					//cuadrupletes
+		//					if ((guards.Exists(d => d.Day == guard.Day.AddDays(2) &&
+		//											d.assignedUsers.Any(a => a.NameSurname.Equals(us.NameSurname))) &&
+		//							guards.Exists(d => d.Day == guard.Day.AddDays(4) &&
+		//											d.assignedUsers.Any(a => a.NameSurname.Equals(us.NameSurname))) &&
+		//							guards.Exists(d => d.Day == guard.Day.AddDays(6) &&
+		//											d.assignedUsers.Any(a => a.NameSurname.Equals(us.NameSurname)))
+		//						))
+		//					{
+		//						stat.TotalCuatripletes++;
+		//					}
+		//				}
+
+		//			}
+		//			if (result)
+		//			{
+
+		//				dynamic obj = new
+		//				{
+		//					result = "OK",
+		//					stat = stat
+		//				};
+		//				return await Task.FromResult(JsonConvert.SerializeObject(obj));
+		//			}
+		//			else
+		//			{
+		//				return await Task.FromResult("Error al guardar la guardia");
+		//			}
+		//		}
+		//		else
+		//		{
+		//			return await Task.FromResult("Error al borrar la guardia previamente calculada");
+		//		}
+		//	}
+		//}
+
+		private async Task<string> AsignMonthGuards(int month, int idCenter,
+													List<User> users,
 													List<DayGuard> previousGuards,
 													List<Unity> unities,
 													List<UserStats> userstats,
@@ -230,10 +512,11 @@ namespace onGuardManager.Bussiness.Service
 		{
 			List<Day> days = new List<Day>();
 			//recorremos los días del mes
-			DateOnly date = guardIntervals[groupOfWeeks].firstDayInterval;
-			int i = 0;
-			while (date.CompareTo(guardIntervals[groupOfWeeks].lastDayInterval) <= 0)
+			int totalDaysMonth = DateTime.DaysInMonth(DateTime.Now.Year, month);
+
+			for (int i = 0; i < totalDaysMonth; i++)
 			{
+				DateOnly date = new DateOnly(DateTime.Now.Year, month, i + 1);
 				//calculamos los usuarios que no trabajen este día
 				Dictionary<User, string> absents = new Dictionary<User, string>();
 
@@ -261,17 +544,15 @@ namespace onGuardManager.Bussiness.Service
 				}
 
 				days.Add(newDay);
-				i++;
-				date = date.AddDays(1);
 			}
 
 			if (!BacktrackingGuard(days, userstats, OrderDays(days), publicHolidays, unities))
 			{
-				return await Task.FromResult("No se pueden asignar las guardias del grupo de semanas " + guardIntervals[groupOfWeeks].firstDayInterval.ToString() + " - " + guardIntervals[groupOfWeeks].lastDayInterval.ToString());
+				return await Task.FromResult("No se pueden asignar las guardias del mes " + month);
 			}
 			else
 			{
-				if (await DeletePreviousGuard(guardIntervals[groupOfWeeks]))
+				if (await DeletePreviousGuard(month))
 				{
 					//guardamos la asignación
 					bool result = true;
@@ -428,13 +709,13 @@ namespace onGuardManager.Bussiness.Service
 
 		private bool BacktrackingGuard(List<Day> days, List<UserStats> userStats, Day day, List<PublicHoliday> publicHolidays, List<Unity> unities)
 		{
-			if(!days.Exists(d => d.assigned.Count < 6))
+			if(!days.Exists(d => d.assigned.Count < maxUsersAssignedByDay))
 			{
 				return true;
 			}
 			else
 			{
-				if(day.assigned.Count == 6)
+				if(day.assigned.Count == maxUsersAssignedByDay)
 				{
 					return BacktrackingGuard(days, userStats, OrderDays(days), publicHolidays, unities);
 				}
@@ -472,13 +753,13 @@ namespace onGuardManager.Bussiness.Service
 
 		private Day OrderDays(List<Day> days)
 		{
-			return days.Where(d => d.assigned.Count < 6).OrderBy(d => d.day).First();
+			return days.Where(d => d.assigned.Count < maxUsersAssignedByDay).OrderBy(d => d.day).First();
 		}
 
 		private List<UserStats> GetUsersOrdered(List<UserStats> userStats, Day day, List<PublicHoliday> publicHolidays)
 		{
 			List<UserStats> users;
-			if (day.assigned.Count < 5)
+			if (day.assigned.Count < maxUsersAssignedByDay-1)
 			{
 				//debemos escoger el usuario más óptimo cuyo nivel no esté ya en asignados
 				users = userStats.Where(u => !day.assigned.Select(a => a.Id).Contains(u.user.Id) &&
@@ -497,7 +778,7 @@ namespace onGuardManager.Bussiness.Service
 			//si no queda ninguno de los usuarios que cumplen todas las reglas, cogemos los posibles
 			if (users.Count == 0)
 			{
-				if (day.assigned.Count < 5)
+				if (day.assigned.Count < maxUsersAssignedByDay - 1)
 				{
 					//debemos escoger el usuario más óptimo cuyo nivel no esté ya en asignados
 					users = userStats.Where(u => day.possible.Keys.Select(a => a.Id).Contains(u.user.Id) &&
@@ -587,10 +868,10 @@ namespace onGuardManager.Bussiness.Service
 			//se puede 1, de lunes a jueves. Sábado y domingo no mas de 3 de la misma unidad. 
 			if (((day.day.DayOfWeek == DayOfWeek.Monday || day.day.DayOfWeek == DayOfWeek.Tuesday ||
 				 day.day.DayOfWeek == DayOfWeek.Wednesday || day.day.DayOfWeek == DayOfWeek.Thursday) &&
-				day.assigned.Count < 6 &&
+				day.assigned.Count < maxUsersAssignedByDay &&
 				day.assigned.Count(a => a.IdUnity == us.user.IdUnity) == unities.First(u => u.Id == us.user.IdUnity).MaxByDay) ||
 				((day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Saturday) &&
-				  day.assigned.Count < 6 &&
+				  day.assigned.Count < maxUsersAssignedByDay &&
 				  day.assigned.Count(a => a.IdUnity == us.user.IdUnity) == unities.First(u => u.Id == us.user.IdUnity).MaxByDayWeekend))
 			{
 				//El resto de residentes de la misma unidad quedan inelegibles para este día
