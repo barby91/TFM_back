@@ -10,7 +10,7 @@ using System.Linq.Expressions;
 
 namespace OnGuardManager.WebAPI.Controllers
 {
-	[Route("api/[controller]")]
+	/*[Route("api/[controller]")]
 	[ApiController]
 	public class AssignmentController : ControllerBase
 	{
@@ -273,5 +273,5 @@ namespace OnGuardManager.WebAPI.Controllers
 				return BadRequest(ex.Message);
 			}
 		}*/
-	}
-}
+	/*}
+}*/

@@ -301,6 +301,53 @@ namespace onGuardManager.Test.Services
 			#endregion
 		}
 
+		[TestCaseSource(nameof(GetUsersCase))]
+		[Test]
+		public void UserServiceTestGetAllUsersByCenterRules(List<User> expected, List<User> user)
+		{
+			#region Arrange
+			_userRepository.Setup(ur => ur.GetAllUsersByCenter(It.IsAny<int>(), It.IsAny<bool>())).ReturnsAsync(user);
+			#endregion
+
+			#region Actual
+			List<User> actual = _serviceUser.GetAllUsersByCenterRules(1, It.IsAny<bool>()).Result;
+			#endregion
+
+			#region Assert
+			if (actual.Count > 0 && actual.Count == expected.Count)
+			{
+				for (int i = 0; i < actual.Count; i++)
+				{
+					Assert.That(actual[i].Id, Is.EqualTo(expected[i].Id));
+					Assert.That(actual[i].Name, Is.EqualTo(expected[i].Name));
+					Assert.That(actual[i].Surname, Is.EqualTo(expected[i].Surname));
+					Assert.That(actual[i].Password, Is.EqualTo(expected[i].Password));
+					Assert.That(actual[i].Email, Is.EqualTo(expected[i].Email));
+					Assert.That(actual[i].IdLevel, Is.EqualTo(expected[i].IdLevel));
+					Assert.That(actual[i].IdCenter, Is.EqualTo(expected[i].IdCenter));
+					Assert.That(actual[i].IdRol, Is.EqualTo(expected[i].IdRol));
+					Assert.That(actual[i].IdSpecialty, Is.EqualTo(expected[i].IdSpecialty));
+				}
+			}
+			else
+			{
+				Assert.That(actual.Count, Is.EqualTo(expected.Count));
+			}
+			#endregion
+		}
+
+		[Test]
+		public void UserServiceTestGetAllUsersByCenterRulesException()
+		{
+			#region Arrange
+			_userRepository.Setup(ur => ur.GetAllUsersByCenter(It.IsAny<int>(), It.IsAny<bool>())).Throws(() => new Exception());
+			#endregion
+
+			#region Assert
+			Assert.ThrowsAsync<Exception>(async () => await _serviceUser.GetAllUsersByCenterRules(1, It.IsAny<bool>()));
+			#endregion
+		}
+
 		[Test]
 		public void UserServiceTestGetUserModelById()
 		{
@@ -736,6 +783,46 @@ namespace onGuardManager.Test.Services
 			{
 				null,
 				null
+			}
+		};
+
+		private static object?[] GetUsersCase =
+		{
+			new object[] { new List<User>(), new List<User>()},
+			new object[] 
+			{ 
+				new List<User>()
+				{
+					new User()
+					{
+						IdCenter = 1,
+						Email = "email",
+						Id = 1,
+						IdLevel = 1,
+						IdRol = 1,
+						IdSpecialty = 1,
+						IdUnity = 1,
+						Name = "name",
+						Surname = "surname",
+						Password = "1234"
+					}
+				},
+				new List<User>()
+				{
+					new User()
+					{
+						IdCenter = 1,
+						Email = "email",
+						Id = 1,
+						IdLevel = 1,
+						IdRol = 1,
+						IdSpecialty = 1,
+						IdUnity = 1,
+						Name = "name",
+						Surname = "surname",
+						Password = "1234"
+					}
+				} 
 			}
 		};
 

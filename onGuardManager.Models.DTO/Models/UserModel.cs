@@ -100,25 +100,25 @@ namespace onGuardManager.Models.DTO.Models
 			colors.Add(new ColorUser()
 			{
 				name = "Hepatobilio y transplante",
-				color = "#12F30B"
+				color = "#1BDE1E"
 			});
 			
 			colors.Add(new ColorUser()
 			{
 				name = "Urgencias, cirugía general y Endocrino",
-				color = "#F30BDE"
+				color = "#1B71DE"
 			});
 			
 			colors.Add(new ColorUser()
 			{
 				name = "Esófago gástrica",
-				color = "#0B7FF3"
+				color = "#E1E116"
 			});
 			
 			colors.Add(new ColorUser()
 			{
 				name = "Rotatorio",
-				color = "#ECF30B"
+				color = "#861AF1"
 			});
 
 			ColorUser? color = colors.Find(c => c.name == unityName);

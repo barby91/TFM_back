@@ -552,6 +552,7 @@ namespace onGuardManager.Bussiness.Service
 			}
 			else
 			{
+				//si se ha asignado, se reorganizan aquellos usuarios que tengnan menos guardias del mínimo
 				if (await DeletePreviousGuard(month))
 				{
 					//guardamos la asignación
@@ -939,8 +940,8 @@ namespace onGuardManager.Bussiness.Service
 			}
 
 			//R7 R3 y R4 de pared (unidad de endocrino) no deberían coincidir
-			if (unities.Exists(u => u.IdSpecialty == us.user.IdSpecialty && u.Name.ToLower().Equals("endocrino")) && us.user.IdUnity == unities.First(u => u.IdSpecialty == us.user.IdSpecialty &&
-														u.Name.ToLower().Equals("endocrino")).Id &&
+			if (unities.Exists(u => u.IdSpecialty == us.user.IdSpecialty && u.Name.ToLower().Contains("endocrino")) && us.user.IdUnity == unities.First(u => u.IdSpecialty == us.user.IdSpecialty &&
+														u.Name.ToLower().Contains("endocrino")).Id &&
 				us.user.IdLevelNavigation.Name.ToUpper().Equals("R3"))
 			{
 				//todos los de la misma unidad de R5 deben ir a posibles
@@ -955,9 +956,9 @@ namespace onGuardManager.Bussiness.Service
 				}
 
 			}
-			if (unities.Exists(u => u.IdSpecialty == us.user.IdSpecialty && u.Name.ToLower().Equals("endocrino")) && 
+			if (unities.Exists(u => u.IdSpecialty == us.user.IdSpecialty && u.Name.ToLower().Contains("endocrino")) && 
 				us.user.IdUnity == unities.First(u => u.IdSpecialty == us.user.IdSpecialty &&
-														u.Name.ToLower().Equals("endocrino")).Id &&
+														u.Name.ToLower().Contains("endocrino")).Id &&
 				us.user.IdLevelNavigation.Name.ToUpper().Equals("R4"))
 			{
 				//todos los de la misma unidad de R4 deben ir a posibles
@@ -1368,9 +1369,9 @@ namespace onGuardManager.Bussiness.Service
 			}
 
 			//R7 R3 y R4 de pared (unidad de endocrino) no deberían coincidir
-			if (unities.Exists(u => u.IdSpecialty == us.user.IdSpecialty && u.Name.ToLower().Equals("endocrino")) &&
+			if (unities.Exists(u => u.IdSpecialty == us.user.IdSpecialty && u.Name.ToLower().Contains("endocrino")) &&
 				us.user.IdUnity == unities.First(u => u.IdSpecialty == us.user.IdSpecialty &&
-													  u.Name.ToLower().Equals("endocrino")).Id &&
+													  u.Name.ToLower().Contains("endocrino")).Id &&
 				us.user.IdLevelNavigation.Name.ToUpper().Equals("R3"))
 			{
 				//todos los de la misma unidad de R5 deben ir a posibles
@@ -1386,9 +1387,9 @@ namespace onGuardManager.Bussiness.Service
 				}
 
 			}
-			if (unities.Exists(u => u.IdSpecialty == us.user.IdSpecialty && u.Name.ToLower().Equals("endocrino")) &&
+			if (unities.Exists(u => u.IdSpecialty == us.user.IdSpecialty && u.Name.ToLower().Contains("endocrino")) &&
 				us.user.IdUnity == unities.First(u => u.IdSpecialty == us.user.IdSpecialty &&
-														u.Name.ToLower().Equals("endocrino"))?.Id &&
+														u.Name.ToLower().Contains("endocrino"))?.Id &&
 				us.user.IdLevelNavigation.Name.ToUpper().Equals("R4"))
 			{
 					//todos los de la misma unidad de R4 deben ir a posibles
