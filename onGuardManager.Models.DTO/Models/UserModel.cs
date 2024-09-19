@@ -65,7 +65,7 @@ namespace onGuardManager.Models.DTO.Models
 			{
 				this.levelName = user.IdLevelNavigation.Name;
 				//TODO solo para pruebas de asignación de guardias
-				//this.NameSurname = user.Name + "_" + user.IdLevelNavigation.Name;
+				this.NameSurname = user.Name + "_" + user.IdLevelNavigation.Name;
 			}
 			if (user.IdRolNavigation != null)
 			{
@@ -80,7 +80,7 @@ namespace onGuardManager.Models.DTO.Models
 				this.unityName = user.IdUnityNavigation.Name;
 				//TODO solo para pruebas de asignación de guardias
 				//this.NameSurname += "_" + user.IdUnityNavigation.Name;
-				//SetColor(user.IdUnityNavigation.Name);
+				SetColor(user.IdUnityNavigation.Name);
 			}
 		}
 
@@ -88,24 +88,24 @@ namespace onGuardManager.Models.DTO.Models
 
 		#region private methods
 		//TODO solo para pruebas de asignación de guardias
-		/*private void SetColor(string unityName)
+		private void SetColor(string unityName)
 		{
 			List<ColorUser> colors = new List<ColorUser>();
 			colors.Add(new ColorUser()
 			{
-				name = "Colon",
+				name = "Colorrectal",
 				color = "#F30B0B"
 			});
 			
 			colors.Add(new ColorUser()
 			{
-				name = "Hepáticobilio",
+				name = "Hepatobilio y transplante",
 				color = "#12F30B"
 			});
 			
 			colors.Add(new ColorUser()
 			{
-				name = "Endocrino",
+				name = "Urgencias, cirugía general y Endocrino",
 				color = "#F30BDE"
 			});
 			
@@ -124,7 +124,7 @@ namespace onGuardManager.Models.DTO.Models
 			ColorUser? color = colors.Find(c => c.name == unityName);
 			this.Color = color != null ? color.color : "";
 		}
-		*/
+		
 
 		/// <summary>
 		/// Este método calcula los días restante del periodo correspondiente al año pasado por parámetro

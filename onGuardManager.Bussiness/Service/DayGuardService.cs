@@ -759,36 +759,36 @@ namespace onGuardManager.Bussiness.Service
 		private List<UserStats> GetUsersOrdered(List<UserStats> userStats, Day day, List<PublicHoliday> publicHolidays)
 		{
 			List<UserStats> users;
-			if (day.assigned.Count < maxUsersAssignedByDay-1)
-			{
+			/*if (day.assigned.Count < maxUsersAssignedByDay-1)
+			{*/
 				//debemos escoger el usuario más óptimo cuyo nivel no esté ya en asignados
 				users = userStats.Where(u => !day.assigned.Select(a => a.Id).Contains(u.user.Id) &&
 											 !day.absents.Keys.Select(k => k.Id).Contains(u.user.Id) &&
 											 !day.possible.Keys.Select(a => a.Id).Contains(u.user.Id) &&
 											 !day.assigned.Select(a => a.IdLevel).Contains(u.user.IdLevel)).ToList();
-			}
+			/*}
 			else
 			{
 				//cogemos el usaurio más óptimo de los restantes
 				users = userStats.Where(u => !day.assigned.Select(a => a.Id).Contains(u.user.Id) &&
 											 !day.absents.Keys.Select(k => k.Id).Contains(u.user.Id) &&
 											 !day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
-			}
+			}*/
 
 			//si no queda ninguno de los usuarios que cumplen todas las reglas, cogemos los posibles
 			if (users.Count == 0)
 			{
-				if (day.assigned.Count < maxUsersAssignedByDay - 1)
-				{
+				/*if (day.assigned.Count < maxUsersAssignedByDay - 1)
+				{*/
 					//debemos escoger el usuario más óptimo cuyo nivel no esté ya en asignados
 					users = userStats.Where(u => day.possible.Keys.Select(a => a.Id).Contains(u.user.Id) &&
 												 !day.assigned.Select(a => a.IdLevel).Contains(u.user.IdLevel)).ToList();
-				}
+				/*}
 				else
 				{
 					//cogemos el usuario más óptimo de los restantes
 					users = userStats.Where(u => day.possible.Keys.Select(a => a.Id).Contains(u.user.Id)).ToList();
-				}
+				}*/
 			}
 
 			users = (day.day.DayOfWeek == DayOfWeek.Saturday || day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Friday
@@ -854,14 +854,14 @@ namespace onGuardManager.Bussiness.Service
 
 			//R2 nunca viernes-domingo ni sábado-lunes
 			if ((day.day.DayOfWeek == DayOfWeek.Friday || day.day.DayOfWeek == DayOfWeek.Saturday) && 
-				days.Exists(d => d.day == day.day.AddDays(2) && !d.absents.Keys.Contains(us.user)))
+				days.Exists(d => d.day == day.day.AddDays(2) && !d.possible.Keys.Contains(us.user)))
 			{
-				days.First(d => d.day == day.day.AddDays(2)).absents.Add(us.user, "nunca viernes-domingo o sábado-lunes");
+				days.First(d => d.day == day.day.AddDays(2)).possible.Add(us.user, "nunca viernes-domingo o sábado-lunes");
 			}
 			else if ((day.day.DayOfWeek == DayOfWeek.Sunday || day.day.DayOfWeek == DayOfWeek.Monday) && 
-					days.Exists(d => d.day == day.day.AddDays(-2) && !d.absents.Keys.Contains(us.user)))
+					days.Exists(d => d.day == day.day.AddDays(-2) && !d.possible.Keys.Contains(us.user)))
 			{
-				days.First(d => d.day == day.day.AddDays(-2)).absents.Add(us.user, "nunca viernes-domingo o o sábado-lunes");
+				days.First(d => d.day == day.day.AddDays(-2)).possible.Add(us.user, "nunca viernes-domingo o o sábado-lunes");
 			}
 
 			//R3 Nunca mas de 2 de la misma unidad de guardia, salvo de esófago gástrica que solo
@@ -1256,7 +1256,7 @@ namespace onGuardManager.Bussiness.Service
 			}
 			if (days.Exists(d => d.day == day.day.AddDays(-1)) &&
 				days.First(d => d.day == day.day.AddDays(-1)).absents.Keys.Contains(us.user) &&
-				days.First(d => d.day == day.day.AddDays(-1)).absents[us.user] == "nunca 2 días seguidos (dia siguiente)")
+				days.First(d => d.day == day.day.AddDays(-1)).absents[us.user] == "nunca 2 días seguidos (día anterior)")
 			{
 				days.First(d => d.day == day.day.AddDays(-1)).absents.Remove(us.user);
 			}
@@ -1265,20 +1265,20 @@ namespace onGuardManager.Bussiness.Service
 			//nunca viernes-domingo ni sábado-lunes
 			if ((day.day.DayOfWeek == DayOfWeek.Friday || day.day.DayOfWeek == DayOfWeek.Saturday) &&
 				(days.Exists(d => d.day == day.day.AddDays(2)) &&
-				 days.First(d => d.day == day.day.AddDays(2)).absents.Keys.Contains(us.user) &&
-				 days.First(d => d.day == day.day.AddDays(2)).absents[us.user] == "nunca viernes-domingo o sábado-lunes"))
+				 days.First(d => d.day == day.day.AddDays(2)).possible.Keys.Contains(us.user) &&
+				 days.First(d => d.day == day.day.AddDays(2)).possible[us.user] == "nunca viernes-domingo o sábado-lunes"))
 			{
-				days.First(d => d.day == day.day.AddDays(2)).absents.Remove(us.user);
+				days.First(d => d.day == day.day.AddDays(2)).possible.Remove(us.user);
 			}
-			/*else if (day.day.DayOfWeek == DayOfWeek.Sunday || (day.day.DayOfWeek == DayOfWeek.Monday))
+			else if (day.day.DayOfWeek == DayOfWeek.Sunday || (day.day.DayOfWeek == DayOfWeek.Monday))
 			{
 				if (days.Exists(d => d.day == day.day.AddDays(-2)) &&
-					days.First(d => d.day == day.day.AddDays(-2)).absents.Keys.Contains(us.user) &&
-					days.First(d => d.day == day.day.AddDays(-2)).absents[us.user] == "nunca viernes-domingo o sábado-lunes")
+					days.First(d => d.day == day.day.AddDays(-2)).possible.Keys.Contains(us.user) &&
+					days.First(d => d.day == day.day.AddDays(-2)).possible[us.user] == "nunca viernes-domingo o sábado-lunes")
 				{
-					days.First(d => d.day == day.day.AddDays(-2)).absents.Remove(us.user);
+					days.First(d => d.day == day.day.AddDays(-2)).possible.Remove(us.user);
 				}
-			}*/
+			}
 			else
 			{
 				//se añade este usuario a la lista de posibles para +2 días y para -2 días
