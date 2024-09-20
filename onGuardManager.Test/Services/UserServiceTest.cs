@@ -94,9 +94,6 @@ namespace onGuardManager.Test.Services
 		public void UserServiceTestGetUserByEmailAndPassFindUserException()
 		{
 			#region Arrange
-			string user = "usuario.usuario@salud.madrid.org";
-			string password = "pasword";
-
 			_userRepository.Setup(ur => ur.GetUserByEmailAndPass(It.IsAny<string>(), It.IsAny<string>())).Throws(() => new Exception());
 			#endregion
 
@@ -363,7 +360,6 @@ namespace onGuardManager.Test.Services
 				specialtyName = "Especialidad",
 				unityName = "Unidad",
 				centerName = "Centro",
-				Color = String.Empty,
 				HolidayCurrentPeriod = 0,
 				HolidayPreviousPeriod = 0
 			};
@@ -441,7 +437,6 @@ namespace onGuardManager.Test.Services
 			Assert.That(actual.specialtyName, Is.EqualTo(expected.specialtyName));
 			Assert.That(actual.unityName, Is.EqualTo(expected.unityName));
 			Assert.That(actual.centerName, Is.EqualTo(expected.centerName));
-			Assert.That(actual.Color, Is.EqualTo(expected.Color));
 			Assert.That(actual.HolidayCurrentPeriod, Is.EqualTo(expected.HolidayCurrentPeriod));
 			Assert.That(actual.HolidayCurrentPeriod, Is.EqualTo(expected.HolidayCurrentPeriod));
 			#endregion
@@ -738,7 +733,7 @@ namespace onGuardManager.Test.Services
 					}
 				}
 			},
-			new object[]
+			new object?[]
 			{
 				null,
 				new User()
@@ -779,7 +774,7 @@ namespace onGuardManager.Test.Services
 					}
 				}
 			},
-			new object[]
+			new object?[]
 			{
 				null,
 				null

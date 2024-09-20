@@ -35,7 +35,6 @@ namespace onGuardManager.Models.DTO.Models
 
 		public List<AskedHolidayModel> AskedHolidays { get; set; } = new List<AskedHolidayModel>();
 
-		public string Color { get; set; } = string.Empty;
 		#endregion
 
 		#region constructor
@@ -64,8 +63,6 @@ namespace onGuardManager.Models.DTO.Models
 			if (user.IdLevelNavigation != null)
 			{
 				this.levelName = user.IdLevelNavigation.Name;
-				//TODO solo para pruebas de asignación de guardias
-				this.NameSurname += "_" + user.IdLevelNavigation.Name;
 			}
 			if (user.IdRolNavigation != null)
 			{
@@ -78,54 +75,13 @@ namespace onGuardManager.Models.DTO.Models
 			if(user.IdUnityNavigation != null)
 			{
 				this.unityName = user.IdUnityNavigation.Name;
-				//TODO solo para pruebas de asignación de guardias
-				//this.NameSurname += "_" + user.IdUnityNavigation.Name;
-				SetColor(user.IdUnityNavigation.Name);
 			}
 		}
 
 		#endregion
 
 		#region private methods
-		//TODO solo para pruebas de asignación de guardias
-		private void SetColor(string unityName)
-		{
-			List<ColorUser> colors = new List<ColorUser>();
-			colors.Add(new ColorUser()
-			{
-				name = "Colorrectal",
-				color = "#F30B0B"
-			});
-			
-			colors.Add(new ColorUser()
-			{
-				name = "Hepatobilio y transplante",
-				color = "#1BDE1E"
-			});
-			
-			colors.Add(new ColorUser()
-			{
-				name = "Urgencias, cirugía general y Endocrino",
-				color = "#1B71DE"
-			});
-			
-			colors.Add(new ColorUser()
-			{
-				name = "Esófago gástrica",
-				color = "#E1E116"
-			});
-			
-			colors.Add(new ColorUser()
-			{
-				name = "Rotatorio",
-				color = "#861AF1"
-			});
-
-			ColorUser? color = colors.Find(c => c.name == unityName);
-			this.Color = color != null ? color.color : "";
-		}
 		
-
 		/// <summary>
 		/// Este método calcula los días restante del periodo correspondiente al año pasado por parámetro
 		/// </summary>

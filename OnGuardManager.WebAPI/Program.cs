@@ -50,7 +50,7 @@ try
 
 	builder.Services.AddControllersWithViews();
 	
-	builder.Services.AddDbContext<OnGuardManagerContext>(async opciones =>
+	builder.Services.AddDbContext<OnGuardManagerContext>(opciones =>
 	{
 #if DEBUG
 		opciones.UseSqlServer(builder.Configuration.GetConnectionString("cadenaSQLDev"));

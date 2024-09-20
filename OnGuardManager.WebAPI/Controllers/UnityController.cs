@@ -88,7 +88,6 @@ namespace OnGuardManager.WebAPI.Controllers
 			{
 				bool result =  await _unityService.UpdateUnity(unityModel.Map());
 				return Ok(result);
-				return Ok(result);
 			}
 			catch (Exception ex)
 			{
