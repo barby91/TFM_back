@@ -142,6 +142,8 @@ namespace onGuardManager.Bussiness.Service
 			try
 			{
 				newUser.Password = "1234";
+				newUser.HolidayCurrentPeridod = 22;
+				newUser.HolidayPreviousPeriod = 0;
 				return await _userRepository.AddUser(newUser);
 			}
 			catch (Exception ex)
@@ -182,7 +184,9 @@ namespace onGuardManager.Bussiness.Service
 								Password = "1234",
 								IdRol = rol.Id,
 								IdSpecialty = specialty.Id,
-								IdUnity = unity.Id
+								IdUnity = unity.Id,
+								HolidayCurrentPeridod = 22,
+								HolidayPreviousPeriod = 0
 							});
 						}
 						else
