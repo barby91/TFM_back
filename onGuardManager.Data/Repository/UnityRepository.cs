@@ -179,6 +179,8 @@ namespace onGuardManager.Data.Repository
 				{
 					currentUnity.Description = unity.Description;
 					currentUnity.Name = unity.Name;
+					currentUnity.MaxByDay = unity.MaxByDay;
+					currentUnity.MaxByDayWeekend = unity.MaxByDayWeekend;
 					result = await _context.SaveChangesAsync() != 0;
 					LogClass.WriteLog(ErrorWrite.Info, "Se ha actualizado la unidad en la base de datos");
 				}
